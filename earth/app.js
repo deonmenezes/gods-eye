@@ -34,8 +34,43 @@ function swapToFallback(reason) {
   for (const cam of STATE.cameras.values()) placePin(cam);
 }
 
+async function preflightMapTiles(key) {
+  // Hit the Map Tiles API directly. If the key isn't authorized for Map
+  // Tiles, or billing isn't enabled, this returns 403 PERMISSION_DENIED.
+  // No CORS issues — the API allows direct fetch.
+  try {
+    const r = await fetch(
+      `https://tile.googleapis.com/v1/createSession?key=${encodeURIComponent(key)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mapType: "satellite", language: "en-US", region: "US" }),
+      },
+    );
+    if (!r.ok) {
+      const body = await r.text().catch(() => "");
+      let parsed; try { parsed = JSON.parse(body); } catch {}
+      const reason = parsed?.error?.message || `HTTP ${r.status}`;
+      return { ok: false, reason };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: e.message || String(e) };
+  }
+}
+
 async function loadMaps3D() {
   if (!mapsApiKey) return false;
+
+  // Pre-flight: confirm Map Tiles API + billing are usable before mounting
+  // <gmp-map-3d>. This is the most reliable signal — the alternative
+  // (sniffing Google's error UI inside the closed shadow root) doesn't work.
+  const pre = await preflightMapTiles(mapsApiKey);
+  if (!pre.ok) {
+    console.warn("[sentinel] Map Tiles preflight failed:", pre.reason);
+    STATE.fallbackReason = `Map Tiles API rejected the key — ${pre.reason}`;
+    return false;
+  }
 
   // Google Maps calls this global on key/billing/restriction failures.
   window.gm_authFailure = () => swapToFallback("auth failure (check key/restrictions/billing)");
@@ -391,7 +426,7 @@ function startTickLoop() {
 
 (async () => {
   const ok = await loadMaps3D().catch(err => { console.warn(err); return false; });
-  if (!ok) loadFallbackGlobe();
+  if (!ok) loadFallbackGlobe(STATE.fallbackReason);
   await bootstrap();
   startTickLoop();
 })();

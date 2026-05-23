@@ -357,7 +357,19 @@ function enterCity(cityId) {
   const cams = [...STATE.cameras.values()].filter(c => c.city_id === cityId);
   $("#locator-sub").textContent = `${cams.length} cameras · ${city.country}`;
   $("#back-btn").classList.add("visible");
+
+  // Auto-select the worst-severity camera in this city so the detail panel
+  // (and the CCTV video) populate immediately.
+  const ranked = cams.slice().sort((a, b) =>
+    (SEVERITY_RANK[b.severity] || 0) - (SEVERITY_RANK[a.severity] || 0)
+  );
+  const target = ranked[0] || cams[0];
+  if (target) {
+    setTimeout(() => selectCamera(target.camera_id), 200);
+  }
 }
+
+const SEVERITY_RANK = { info: 0, low: 1, medium: 2, high: 3, critical: 4 };
 
 function exitToWorld() {
   STATE.mode = "world";
@@ -690,6 +702,8 @@ function renderNoIncident() {
   $("#d-findings").innerHTML = "";
   $("#d-trace").innerHTML = "";
   cctvScenarioId = null; cctvSeverity = "info";
+  // Show a default Veo clip in the viewport so it's never blank.
+  loadVeoClipFor("scn-normal-pedestrian", null);
 }
 
 function renderIncident(inc) {
@@ -746,6 +760,82 @@ $("#copy-link").addEventListener("click", () => {
   navigator.clipboard?.writeText($("#d-deeplink").value);
   const b = $("#copy-link"); const orig = b.textContent;
   b.textContent = "copied"; setTimeout(() => b.textContent = orig, 1200);
+});
+
+// =================================================================
+// TWILIO DISPATCH
+// =================================================================
+
+const DISPATCH_COOLDOWN_MS = 10 * 60 * 1000;          // 10 minutes per camera
+const lastDispatchAt = new Map();                     // camera_id -> ts
+const inFlightDispatch = new Set();                   // camera_id
+
+async function fireDispatch(incident, { manual = false } = {}) {
+  if (!incident) return;
+  const cid = incident.camera_id;
+  if (!cid) return;
+  if (inFlightDispatch.has(cid)) return;
+  if (!manual) {
+    const last = lastDispatchAt.get(cid) || 0;
+    if (Date.now() - last < DISPATCH_COOLDOWN_MS) return;
+  }
+  inFlightDispatch.add(cid);
+
+  const cam = STATE.cameras.get(cid) || {};
+  const city = STATE.cities.get(cam.city_id);
+  const payload = {
+    incident_id: incident.incident_id,
+    camera_id: cid,
+    camera_label: cam.label || cid,
+    severity: incident.severity,
+    scene_summary: incident.scene_summary,
+    recommended_action: incident.recommended_action,
+    city: city ? `${city.name}, ${city.country}` : "",
+  };
+
+  showDispatchToast(`Dialing on-call · ${payload.camera_label}…`);
+  try {
+    const r = await fetch("/dispatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const out = await r.json().catch(() => ({}));
+    if (r.ok && out.ok) {
+      lastDispatchAt.set(cid, Date.now());
+      showDispatchToast(`📞 Call placed → ${out.to} · sid=${(out.call_sid || "").slice(0, 10)}…`, "ok");
+    } else {
+      showDispatchToast(`Dispatch failed: ${out.error || r.status}`, "err");
+    }
+  } catch (e) {
+    showDispatchToast(`Dispatch failed: ${e.message}`, "err");
+  } finally {
+    inFlightDispatch.delete(cid);
+  }
+}
+
+function showDispatchToast(msg, kind) {
+  let t = document.getElementById("dispatch-toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "dispatch-toast";
+    t.className = "dispatch-toast";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.className = `dispatch-toast ${kind || ""} visible`;
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove("visible"), 6000);
+}
+
+document.querySelectorAll('.detail-actions [data-action="dispatch"]').forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (!STATE.selectedCameraId) return;
+    const cam = STATE.cameras.get(STATE.selectedCameraId);
+    const inc = cam?.last_incident_id ? STATE.incidentById.get(cam.last_incident_id) : null;
+    if (inc) fireDispatch(inc, { manual: true });
+    else showDispatchToast("No incident selected", "err");
+  });
 });
 
 $("#orbit-toggle").addEventListener("click", () => {
@@ -855,6 +945,9 @@ async function tickOnce() {
       renderIncident(inc);
       const sevEl = $("#d-sev"); sevEl.className = `sev-pill ${inc.severity}`; sevEl.textContent = inc.severity;
     }
+
+    // Auto-dispatch on critical incidents (cooldown-gated per camera).
+    if (inc.severity === "critical") fireDispatch(inc);
   } catch (e) {
     $("#conn-status").className = "conn-dot offline";
     $("#conn-text").textContent = "reconnecting…";

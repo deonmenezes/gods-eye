@@ -20,13 +20,21 @@
     },
     "api/config.py": {
       "maxDuration": 5
+    },
+    "api/dispatch.py": {
+      "maxDuration": 20
+    },
+    "api/twiml.py": {
+      "maxDuration": 5
     }
   },
   "rewrites": [
     { "source": "/config.js", "destination": "/api/config" },
     { "source": "/cameras", "destination": "/api/cameras" },
     { "source": "/cities", "destination": "/api/cities" },
-    { "source": "/tick", "destination": "/api/tick" }
+    { "source": "/tick", "destination": "/api/tick" },
+    { "source": "/dispatch", "destination": "/api/dispatch" },
+    { "source": "/twiml", "destination": "/api/twiml" }
   ],
   "headers": [
     {

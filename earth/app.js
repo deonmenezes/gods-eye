@@ -636,18 +636,22 @@ function useVideo(src, meta) {
   }
   CCTV_BOX.classList.add("has-video");
   CCTV_BOX.classList.remove("no-video");
-  $("#cctv-tag").textContent = (meta?.mode === "gemini")
-    ? `VEO 3.1 · real · gemini ${meta.latency_ms}ms`
-    : "VEO 3.1 · real";
+  $("#cctv-tag").textContent = tagForMeta(meta, true);
 }
 
 function useCanvas(meta) {
   CCTV_BOX.classList.add("no-video");
   CCTV_BOX.classList.remove("has-video");
   try { CCTV_VIDEO.pause(); CCTV_VIDEO.removeAttribute("src"); CCTV_VIDEO.load(); } catch {}
-  $("#cctv-tag").textContent = (meta?.mode === "gemini")
-    ? `VEO 3.1 · synthetic · gemini ${meta.latency_ms}ms`
-    : "VEO 3.1 · synthetic · stub";
+  $("#cctv-tag").textContent = tagForMeta(meta, false);
+}
+
+function tagForMeta(meta, real) {
+  if (!meta) return real ? "VEO 3.1 · real" : "VEO 3.1 · synthetic · stub";
+  const base = real ? "VEO 3.1 · real" : "VEO 3.1 · synthetic";
+  if (meta.mode === "gemini_video") return `${base} · gemini-video ${meta.latency_ms}ms`;
+  if (meta.mode === "gemini") return `${base} · gemini ${meta.latency_ms}ms`;
+  return `${base} · stub`;
 }
 
 // =================================================================
@@ -840,9 +844,10 @@ async function tickOnce() {
     renderFeed();
 
     $("#conn-status").className = "conn-dot online";
-    $("#conn-text").textContent = inc._meta?.mode === "gemini"
-      ? `live · gemini ${inc._meta.latency_ms}ms`
-      : "live · stub";
+    const m = inc._meta;
+    $("#conn-text").textContent = m?.mode === "gemini_video"
+      ? `live · gemini-video ${m.latency_ms}ms`
+      : (m?.mode === "gemini" ? `live · gemini ${m.latency_ms}ms` : "live · stub");
 
     if (!STATE.selectedCameraId && inc.severity !== "info") {
       // do not auto-enter city; let the user pick

@@ -38,23 +38,51 @@ class handler(BaseHTTPRequestHandler):
             t0 = time.time()
             mode = "stub"
             error = None
+            video_used = False
+
+            host = self.headers.get("host") or self.headers.get("Host")
 
             if api_key:
+                # Fetch the pre-baked Veo MP4 so Gemini can analyze the actual frames.
+                video_bytes = _lib.fetch_clip_bytes(scenario["id"], host)
+                video_used = bool(video_bytes)
+                # Cap the inline payload to keep us under the 30s function budget.
+                # Gemini accepts up to 20 MB inline; our clips are well under.
                 try:
-                    incident = _lib.call_gemini(camera, scenario, api_key, model)
+                    incident = _lib.call_gemini(
+                        camera, scenario, api_key, model,
+                        video_bytes=video_bytes,
+                        timeout=24.0,
+                    )
                     incident = _lib.enrich_incident(incident, camera, scenario)
-                    mode = "gemini"
+                    mode = "gemini_video" if video_used else "gemini"
                 except Exception as e:
                     log.exception("gemini call failed")
-                    error = f"{type(e).__name__}: {e}"
-                    incident = _lib.stub_incident(camera, scenario)
+                    error = f"{type(e).__name__}: {e}"[:300]
+                    # Retry once without video (faster) if the video call timed out.
+                    if video_used:
+                        try:
+                            incident = _lib.call_gemini(
+                                camera, scenario, api_key, model,
+                                video_bytes=None, timeout=18.0,
+                            )
+                            incident = _lib.enrich_incident(incident, camera, scenario)
+                            mode = "gemini"
+                            video_used = False
+                            error = None
+                        except Exception as e2:
+                            error = f"{type(e2).__name__}: {e2}"[:300]
+                            incident = _lib.stub_incident(camera, scenario)
+                    else:
+                        incident = _lib.stub_incident(camera, scenario)
             else:
                 incident = _lib.stub_incident(camera, scenario)
 
             incident["_meta"] = {
                 "mode": mode,
                 "latency_ms": int((time.time() - t0) * 1000),
-                "model": model if mode == "gemini" else None,
+                "model": model if mode.startswith("gemini") else None,
+                "video": video_used,
                 "error": error,
             }
             _lib.json_response(self, incident)

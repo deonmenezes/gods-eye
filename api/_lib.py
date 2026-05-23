@@ -27,6 +27,8 @@ def _find_root() -> Path:
 ROOT = _find_root()
 CAMERAS = json.loads((ROOT / "data" / "cameras.json").read_text())
 SCENARIOS = json.loads((ROOT / "scenarios" / "scenarios.json").read_text())
+CITIES_PATH = ROOT / "data" / "cities.json"
+CITIES = json.loads(CITIES_PATH.read_text()) if CITIES_PATH.exists() else []
 
 AGENTS_MD = (ROOT / "agents" / "threat_analyst" / "AGENTS.md").read_text()
 SKILL_MD = {
@@ -45,6 +47,10 @@ def cameras() -> list[dict]:
 
 def scenarios() -> list[dict]:
     return SCENARIOS
+
+
+def cities() -> list[dict]:
+    return CITIES
 
 
 def pick_camera(camera_id: str | None) -> dict:

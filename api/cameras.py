@@ -15,6 +15,7 @@ class handler(BaseHTTPRequestHandler):
         out = [
             {
                 "camera_id": c["camera_id"],
+                "city_id": c.get("city_id"),
                 "label": c.get("label", c["camera_id"]),
                 "lat": c["lat"],
                 "lon": c["lon"],

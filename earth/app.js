@@ -1,20 +1,36 @@
-// Sentinel — Earth canvas command center
+// Sentinel — Two-mode global command center
 //
-// Layout: 3-column. Left feed (live incidents) | center 3D map | right detail.
-// Pins are rendered on a CSS overlay layer above the 3D Map element. We project
-// each camera's lat/lon to viewport pixels via gmp-map-3d's camera projection
-// (with a 2D equirectangular fallback when 3D isn't available).
+// WORLD MODE   : slow auto-orbit over a satellite Earth. Each city is a
+//                pulsing aggregate marker — color = worst-active severity,
+//                count = number of red+yellow incidents. Click → fly in.
+// CITY MODE    : flyCameraTo into the chosen city at street level. Each
+//                camera is an individual gmp-marker-3d-interactive pin
+//                that follows lat/lon natively (no DIY projection).
+//
+// The same right-side detail panel + CCTV viewport + left feed work in
+// both modes. Tick loop keeps running so the world map breathes even
+// when the operator isn't looking at any city.
 
 const cfg = window.SENTINEL_CONFIG || {};
 const mapsApiKey = cfg.mapsApiKey;
 const TICK_MS = (cfg.tickIntervalMs && Number(cfg.tickIntervalMs)) || 4000;
 
-const SF = { lat: 37.78807, lng: -122.40760, altitude: 30 };
+const WORLD_VIEW = {
+  center: { lat: 25, lng: -20, altitude: 0 },
+  range: 19000000,
+  tilt: 0,
+  heading: 0,
+};
 
 const STATE = {
-  cameras: new Map(), // camera_id -> latest state
-  pins: new Map(),    // camera_id -> { el }
-  incidents: [],      // history (newest first)
+  mode: "world",            // "world" | "city"
+  selectedCityId: null,
+  cities: new Map(),        // city_id -> city record
+  cityState: new Map(),     // city_id -> { red, yellow, green, lastIncidentAt }
+  cameras: new Map(),       // camera_id -> camera state
+  pinMarkers: new Map(),    // camera_id -> gmp-marker-3d-interactive element
+  cityMarkers: new Map(),   // city_id -> gmp-marker-3d-interactive element
+  incidents: [],
   incidentById: new Map(),
   selectedCameraId: null,
   feedFilter: "all",
@@ -25,12 +41,11 @@ const STATE = {
   tickCursor: 0,
 };
 
-const $ = (sel) => document.querySelector(sel);
+const $ = (s) => document.querySelector(s);
 const mapRoot = $("#map-root");
-const pinOverlay = $("#pin-overlay");
 
 // =================================================================
-// 3D MAP BOOT
+// MAP BOOT
 // =================================================================
 
 async function preflightMapTiles(key) {
@@ -59,7 +74,6 @@ async function loadMaps3D() {
 
   const pre = await preflightMapTiles(mapsApiKey);
   if (!pre.ok) {
-    console.warn("[sentinel] Map Tiles preflight failed:", pre.reason);
     STATE.fallbackReason = `Map Tiles API rejected the key — ${pre.reason}`;
     return false;
   }
@@ -76,12 +90,8 @@ async function loadMaps3D() {
     document.head.appendChild(s);
   });
 
-  try {
-    await google.maps.importLibrary("maps3d");
-  } catch (e) {
-    console.warn("maps3d library unavailable", e);
-    return false;
-  }
+  try { await google.maps.importLibrary("maps3d"); }
+  catch (e) { console.warn("maps3d library unavailable", e); return false; }
   if (!customElements.get("gmp-map-3d")) return false;
 
   const el = document.createElement("gmp-map-3d");
@@ -90,23 +100,23 @@ async function loadMaps3D() {
   el.setAttribute("default-labels-disabled", "false");
   mapRoot.appendChild(el);
 
-  // Set camera via the element's API (more reliable than attributes).
-  const setCamera = () => {
+  await new Promise(r => setTimeout(r, 100));
+
+  const apply = (view) => {
     try {
-      el.center = { lat: SF.lat, lng: SF.lng, altitude: SF.altitude };
-      el.range = 1400;
-      el.tilt = 62;
-      el.heading = 25;
+      el.center = view.center;
+      el.range = view.range;
+      el.tilt = view.tilt;
+      el.heading = view.heading;
     } catch (e) { console.warn("camera set failed", e); }
   };
-  // First attempt immediately, then once the element is ready.
-  setCamera();
-  el.addEventListener("gmp-load", setCamera);
+  apply(WORLD_VIEW);
+  el.addEventListener("gmp-load", () => apply(WORLD_VIEW));
   el.addEventListener("gmp-error", (ev) => swapToFallback(`gmp-error: ${ev?.detail?.message || "unknown"}`));
 
   STATE.map3d = el;
   STATE.using3D = true;
-  setTimeout(() => { if (STATE.using3D) startOrbit(); }, 1500);
+  startWorldOrbit();
   return true;
 }
 
@@ -115,113 +125,180 @@ function swapToFallback(reason) {
   STATE.using3D = false;
   STATE.fallbackReason = reason;
   loadFallbackGlobe(reason);
-  for (const cam of STATE.cameras.values()) projectPin(cam);
 }
 
 function loadFallbackGlobe(reason) {
   mapRoot.innerHTML = "";
-  const fallback = document.createElement("div");
-  fallback.style.cssText = `
+  const wrap = document.createElement("div");
+  wrap.style.cssText = `
     width: 100%; height: 100%; position: relative;
     background:
-      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(90,169,255,0.18), transparent 65%),
-      radial-gradient(ellipse 30% 30% at 30% 60%, rgba(47,209,122,0.10), transparent 55%),
-      linear-gradient(180deg, #0a0e16 0%, #050608 100%);
+      radial-gradient(circle at 50% 50%, rgba(90,169,255,0.18), transparent 55%),
+      radial-gradient(circle at 30% 70%, rgba(180,135,255,0.10), transparent 60%),
+      linear-gradient(180deg, #050813 0%, #02030a 100%);
   `;
   const note = document.createElement("div");
   note.className = "fallback-notice";
   note.textContent = reason
     ? `2D fallback · ${reason}`
     : (mapsApiKey ? "3D Tiles unavailable — using 2D fallback." : "GOOGLE_MAPS_API_KEY not set — using 2D fallback.");
-  fallback.appendChild(note);
-  // SF area overlay
-  const sfLabel = document.createElement("div");
-  sfLabel.style.cssText = `
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-family: "JetBrains Mono", monospace; font-size: 13px;
-    color: rgba(255,255,255,0.25); letter-spacing: 0.2em;
+  wrap.appendChild(note);
+
+  // Big circular world placeholder with pulsing city dots projected by equirect.
+  const globe = document.createElement("div");
+  globe.id = "fallback-globe";
+  globe.style.cssText = `
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(80%, 800px); aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 35%, rgba(120,180,255,0.35), rgba(20,40,70,0.85) 65%, rgba(0,0,0,0.95) 100%);
+    box-shadow: 0 0 80px rgba(90,169,255,0.25), inset -40px -60px 120px rgba(0,0,0,0.7);
   `;
-  sfLabel.textContent = "SAN FRANCISCO";
-  fallback.appendChild(sfLabel);
-  mapRoot.appendChild(fallback);
+  wrap.appendChild(globe);
+  mapRoot.appendChild(wrap);
+  // Place city dots inside the fallback globe via equirectangular.
+  for (const city of STATE.cities.values()) {
+    const dot = document.createElement("div");
+    dot.className = "fallback-city-dot";
+    dot.dataset.cityId = city.city_id;
+    const x = 50 + (city.lon / 360) * 100;
+    const y = 50 - (city.lat / 180) * 100;
+    dot.style.left = `${x}%`;
+    dot.style.top = `${y}%`;
+    dot.title = city.name;
+    dot.addEventListener("click", () => enterCity(city.city_id));
+    globe.appendChild(dot);
+  }
 }
 
-// Periodically rotate the camera around SF when 3D is up. Pure flair.
+// =================================================================
+// WORLD ORBIT
+// =================================================================
+
 let orbitRaf = null;
-function startOrbit() {
-  if (!STATE.using3D || !STATE.map3d || !STATE.orbitOn) return;
+function startWorldOrbit() {
+  if (!STATE.using3D || !STATE.map3d) return;
+  cancelAnimationFrame(orbitRaf);
   let lastT = performance.now();
-  let heading = 25;
+  let heading = 0;
   const step = (now) => {
-    const dt = (now - lastT) / 1000;
-    lastT = now;
-    if (!STATE.orbitOn || !STATE.using3D) { orbitRaf = null; return; }
-    heading = (heading + dt * 3) % 360;
+    const dt = (now - lastT) / 1000; lastT = now;
+    if (STATE.mode !== "world" || !STATE.orbitOn || !STATE.using3D) { orbitRaf = null; return; }
+    heading = (heading + dt * 4) % 360;
     try { STATE.map3d.heading = heading; } catch {}
-    projectAllPins();
     orbitRaf = requestAnimationFrame(step);
   };
   orbitRaf = requestAnimationFrame(step);
 }
 
+function stopOrbit() { cancelAnimationFrame(orbitRaf); orbitRaf = null; }
+
 // =================================================================
-// PIN OVERLAY
+// CITY AGGREGATE MARKERS (WORLD MODE)
 // =================================================================
 
-const SF_VIEW_BOUNDS = { latRange: 0.05, lngRange: 0.06 };
+function placeCityMarkers() {
+  if (!STATE.using3D || !STATE.map3d) return;
+  if (!customElements.get("gmp-marker-3d-interactive")) return;
 
-function projectPin(camera) {
-  let rec = STATE.pins.get(camera.camera_id);
-  if (!rec) {
-    const el = document.createElement("div");
-    el.className = `pin ${camera.pin_color || "green"}`;
-    el.dataset.cameraId = camera.camera_id;
-    el.addEventListener("mouseenter", (e) => showTooltip(camera, e.currentTarget));
-    el.addEventListener("mouseleave", hideTooltip);
-    el.addEventListener("click", () => selectCamera(camera.camera_id));
-    pinOverlay.appendChild(el);
-    rec = { el };
-    STATE.pins.set(camera.camera_id, rec);
-  }
-  rec.el.className = `pin ${camera.pin_color || "green"}`
-    + (STATE.selectedCameraId === camera.camera_id ? " selected" : "");
+  // Clear any existing markers first.
+  for (const m of STATE.cityMarkers.values()) m.remove();
+  STATE.cityMarkers.clear();
 
-  const rect = pinOverlay.getBoundingClientRect();
-  let x, y;
-  if (STATE.using3D && STATE.map3d) {
-    // 3D map projection: simplified — center the SF cluster around viewport
-    // center and offset by lat/lon delta + camera heading rotation.
-    const dLat = camera.lat - SF.lat;
-    const dLng = camera.lng - SF.lng;
-    const heading = (STATE.map3d.heading || 0) * Math.PI / 180;
-    const cos = Math.cos(heading), sin = Math.sin(heading);
-    const sx = dLng * 6000;  // scale degrees -> pixels (heuristic)
-    const sy = dLat * 6000;
-    x = rect.width / 2 + (sx * cos - sy * sin);
-    y = rect.height / 2 - (sx * sin + sy * cos) * 0.8; // 0.8 for tilt foreshortening
-  } else {
-    // Equirectangular fallback over SF area.
-    const dLng = (camera.lng - SF.lng) / SF_VIEW_BOUNDS.lngRange;
-    const dLat = (SF.lat - camera.lat) / SF_VIEW_BOUNDS.latRange;
-    x = rect.width / 2 + dLng * (rect.width * 0.35);
-    y = rect.height / 2 + dLat * (rect.height * 0.35);
+  for (const city of STATE.cities.values()) {
+    const m = document.createElement("gmp-marker-3d-interactive");
+    try {
+      m.position = { lat: city.lat, lng: city.lon, altitude: 100000 };
+      m.altitudeMode = "ABSOLUTE";
+    } catch {}
+    const wrap = document.createElement("div");
+    wrap.className = `city-marker`;
+    wrap.dataset.cityId = city.city_id;
+    wrap.innerHTML = `
+      <div class="city-pulse"></div>
+      <div class="city-dot"></div>
+      <div class="city-label">${city.name}</div>
+      <div class="city-count">0</div>
+    `;
+    m.appendChild(wrap);
+    m.addEventListener("gmp-click", () => enterCity(city.city_id));
+    wrap.addEventListener("click", (e) => { e.stopPropagation(); enterCity(city.city_id); });
+
+    STATE.map3d.appendChild(m);
+    STATE.cityMarkers.set(city.city_id, m);
   }
-  rec.el.style.left = `${x}px`;
-  rec.el.style.top = `${y}px`;
+  refreshCityMarkers();
 }
 
-function projectAllPins() {
-  for (const cam of STATE.cameras.values()) projectPin(cam);
+function refreshCityMarkers() {
+  for (const [cityId, m] of STATE.cityMarkers.entries()) {
+    const st = STATE.cityState.get(cityId) || { red: 0, yellow: 0, green: 0 };
+    const wrap = m.querySelector(".city-marker");
+    if (!wrap) continue;
+    let color = "green";
+    if (st.red > 0) color = "red";
+    else if (st.yellow > 0) color = "yellow";
+    wrap.classList.remove("red", "yellow", "green");
+    wrap.classList.add(color);
+    const count = st.red + st.yellow;
+    const countEl = wrap.querySelector(".city-count");
+    if (countEl) {
+      countEl.textContent = count > 0 ? String(count) : "";
+      countEl.style.display = count > 0 ? "flex" : "none";
+    }
+  }
+}
+
+// =================================================================
+// CITY MODE — CAMERA PIN MARKERS
+// =================================================================
+
+function placeCityPins(cityId) {
+  if (!STATE.using3D || !STATE.map3d) return;
+  if (!customElements.get("gmp-marker-3d-interactive")) return;
+
+  for (const m of STATE.pinMarkers.values()) m.remove();
+  STATE.pinMarkers.clear();
+
+  const cams = [...STATE.cameras.values()].filter(c => c.city_id === cityId);
+  for (const cam of cams) {
+    const m = document.createElement("gmp-marker-3d-interactive");
+    try {
+      m.position = { lat: cam.lat, lng: cam.lon, altitude: (cam.altitude || 15) };
+      m.altitudeMode = "RELATIVE_TO_GROUND";
+    } catch {}
+    const pin = document.createElement("div");
+    pin.className = `pin ${cam.pin_color || "green"}` + (STATE.selectedCameraId === cam.camera_id ? " selected" : "");
+    pin.dataset.cameraId = cam.camera_id;
+    m.appendChild(pin);
+    m.addEventListener("gmp-click", () => selectCamera(cam.camera_id));
+    pin.addEventListener("click", (e) => { e.stopPropagation(); selectCamera(cam.camera_id); });
+    pin.addEventListener("mouseenter", () => showPinTooltip(cam, pin));
+    pin.addEventListener("mouseleave", hideTooltip);
+    STATE.map3d.appendChild(m);
+    STATE.pinMarkers.set(cam.camera_id, m);
+  }
+}
+
+function refreshCityPins() {
+  for (const [cid, m] of STATE.pinMarkers.entries()) {
+    const cam = STATE.cameras.get(cid);
+    const pin = m.querySelector(".pin");
+    if (!pin || !cam) continue;
+    pin.className = `pin ${cam.pin_color || "green"}` + (STATE.selectedCameraId === cid ? " selected" : "");
+  }
 }
 
 let tooltipEl = null;
-function showTooltip(camera, anchor) {
+function showPinTooltip(camera, anchor) {
   hideTooltip();
   const r = anchor.getBoundingClientRect();
   const tt = document.createElement("div");
   tt.className = "pin-tooltip";
   tt.innerHTML = `
-    <div class="pt-label">${camera.label}</div>
+    <div class="pt-label">${escapeHtml(camera.label)}</div>
     <div class="pt-sub">${camera.camera_id} · ${camera.zone_type || ""} · ${camera.severity || "info"}</div>
   `;
   tt.style.left = `${r.left + r.width / 2}px`;
@@ -231,10 +308,85 @@ function showTooltip(camera, anchor) {
 }
 function hideTooltip() { tooltipEl?.remove(); tooltipEl = null; }
 
-window.addEventListener("resize", projectAllPins);
+// =================================================================
+// CITY ENTER / EXIT (FLY CAMERA)
+// =================================================================
+
+function enterCity(cityId) {
+  const city = STATE.cities.get(cityId);
+  if (!city) return;
+  STATE.mode = "city";
+  STATE.selectedCityId = cityId;
+  stopOrbit();
+
+  // Remove city aggregate markers, add per-camera pins
+  for (const m of STATE.cityMarkers.values()) m.remove();
+  STATE.cityMarkers.clear();
+
+  if (STATE.using3D && STATE.map3d?.flyCameraTo) {
+    try {
+      STATE.map3d.flyCameraTo({
+        endCamera: {
+          center: { lat: city.lat, lng: city.lon, altitude: city.view_altitude || 30 },
+          range: city.view_range || 1500,
+          tilt: city.view_tilt || 62,
+          heading: 25,
+        },
+        durationMillis: 4000,
+      });
+    } catch (e) {
+      // Fallback: just set the camera directly.
+      try {
+        STATE.map3d.center = { lat: city.lat, lng: city.lon, altitude: city.view_altitude };
+        STATE.map3d.range = city.view_range || 1500;
+        STATE.map3d.tilt = city.view_tilt || 62;
+        STATE.map3d.heading = 25;
+      } catch {}
+    }
+  }
+
+  setTimeout(() => placeCityPins(cityId), 1200);
+
+  $("#locator-coords").textContent =
+    `${city.name.toUpperCase()} · ${formatCoord(city.lat, "N", "S")} ${formatCoord(city.lon, "E", "W")}`;
+  const cams = [...STATE.cameras.values()].filter(c => c.city_id === cityId);
+  $("#locator-sub").textContent = `${cams.length} cameras · ${city.country}`;
+  $("#back-btn").classList.add("visible");
+}
+
+function exitToWorld() {
+  STATE.mode = "world";
+  STATE.selectedCityId = null;
+  STATE.selectedCameraId = null;
+
+  for (const m of STATE.pinMarkers.values()) m.remove();
+  STATE.pinMarkers.clear();
+
+  if (STATE.using3D && STATE.map3d?.flyCameraTo) {
+    try {
+      STATE.map3d.flyCameraTo({ endCamera: WORLD_VIEW, durationMillis: 3500 });
+    } catch {
+      try {
+        STATE.map3d.center = WORLD_VIEW.center;
+        STATE.map3d.range = WORLD_VIEW.range;
+        STATE.map3d.tilt = WORLD_VIEW.tilt;
+        STATE.map3d.heading = WORLD_VIEW.heading;
+      } catch {}
+    }
+  }
+
+  setTimeout(() => { placeCityMarkers(); startWorldOrbit(); }, 1600);
+  $("#locator-coords").textContent = "GLOBAL · 0°N 0°W";
+  $("#locator-sub").textContent = `${STATE.cameras.size} cameras · ${STATE.cities.size} cities`;
+  $("#back-btn").classList.remove("visible");
+}
+
+function formatCoord(deg, pos, neg) {
+  return `${Math.abs(deg).toFixed(2)}°${deg >= 0 ? pos : neg}`;
+}
 
 // =================================================================
-// COUNTERS
+// COUNTERS / FEED / DETAIL (mostly carried over)
 // =================================================================
 
 function recomputeCounters() {
@@ -249,9 +401,17 @@ function recomputeCounters() {
   $("#count-green").textContent = g;
 }
 
-// =================================================================
-// INCIDENT FEED (LEFT)
-// =================================================================
+function recomputeCityState() {
+  for (const c of STATE.cities.values()) {
+    STATE.cityState.set(c.city_id, { red: 0, yellow: 0, green: 0 });
+  }
+  for (const cam of STATE.cameras.values()) {
+    const st = STATE.cityState.get(cam.city_id);
+    if (!st) continue;
+    st[cam.pin_color || "green"] = (st[cam.pin_color || "green"] || 0) + 1;
+  }
+  refreshCityMarkers();
+}
 
 function renderFeed() {
   const list = $("#feed-list");
@@ -259,9 +419,18 @@ function renderFeed() {
     if (STATE.feedFilter === "all") return true;
     return inc.pin_color === STATE.feedFilter;
   });
-  list.innerHTML = filtered.slice(0, 50).map(inc => feedCardHtml(inc)).join("");
+  list.innerHTML = filtered.slice(0, 60).map(inc => feedCardHtml(inc)).join("");
   for (const card of list.querySelectorAll(".feed-card")) {
-    card.addEventListener("click", () => selectCamera(card.dataset.cameraId, card.dataset.incidentId));
+    card.addEventListener("click", () => {
+      const cam = STATE.cameras.get(card.dataset.cameraId);
+      if (cam && cam.city_id !== STATE.selectedCityId) {
+        // Jump to that camera's city first, then select after fly-in
+        enterCity(cam.city_id);
+        setTimeout(() => selectCamera(card.dataset.cameraId, card.dataset.incidentId), 1500);
+      } else {
+        selectCamera(card.dataset.cameraId, card.dataset.incidentId);
+      }
+    });
   }
   $("#feed-meta").textContent = `${STATE.incidents.length} events · ${filtered.length} shown`;
 }
@@ -269,17 +438,18 @@ function renderFeed() {
 function feedCardHtml(inc) {
   const sel = STATE.selectedCameraId === inc.camera_id ? "selected" : "";
   const cam = STATE.cameras.get(inc.camera_id) || {};
-  const ago = relativeTime(inc._receivedAt);
+  const city = STATE.cities.get(cam.city_id);
+  const cityLabel = city ? `${city.name}` : "";
   return `
     <div class="feed-card ${inc.pin_color} ${sel}"
          data-camera-id="${inc.camera_id}"
          data-incident-id="${inc.incident_id}">
       <div class="fc-row1">
         <div class="fc-label">${escapeHtml(cam.label || inc.camera_id)}</div>
-        <div class="fc-time">${ago}</div>
+        <div class="fc-time">${relativeTime(inc._receivedAt)}</div>
       </div>
       <div class="fc-row2">
-        <div class="fc-zone">${escapeHtml(cam.zone_type || "—")}</div>
+        <div class="fc-zone">${escapeHtml(cityLabel)} · ${escapeHtml(cam.zone_type || "—")}</div>
         <div class="fc-sev">${inc.severity}</div>
       </div>
       <div class="fc-action">↳ ${inc.recommended_action || "—"}</div>
@@ -300,7 +470,7 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 }
 
-setInterval(() => { renderFeed(); renderRoster(); }, 5000);
+setInterval(() => { renderFeed(); }, 5000);
 
 document.addEventListener("click", e => {
   const tab = e.target.closest(".feed-tab");
@@ -309,14 +479,6 @@ document.addEventListener("click", e => {
   STATE.feedFilter = tab.dataset.filter;
   renderFeed();
 });
-
-function renderRoster() {
-  const roster = $("#feed-roster");
-  if (!roster) return;
-  const reds = [...STATE.cameras.values()].filter(c => c.pin_color === "red").length;
-  const total = STATE.cameras.size;
-  roster.textContent = `${total - reds} / ${total} ok`;
-}
 
 // =================================================================
 // CCTV CANVAS RENDERER
@@ -332,11 +494,9 @@ function cctvFrame() {
   const w = cctvCanvas.width, h = cctvCanvas.height;
   cctvTime += 1 / 30;
 
-  // Background: rolling vertical gradient + faint scan noise
   cctvCtx.fillStyle = "#04060a";
   cctvCtx.fillRect(0, 0, w, h);
 
-  // Subtle floor grid suggesting a CCTV-style scene
   cctvCtx.strokeStyle = `rgba(40, 90, 160, 0.18)`;
   cctvCtx.lineWidth = 1;
   for (let i = 0; i < 8; i++) {
@@ -346,39 +506,29 @@ function cctvFrame() {
   for (let i = -4; i <= 4; i++) {
     const x0 = w / 2;
     const yTop = h * 0.55;
-    const yBot = h;
-    const xt = x0 + i * 60 * (yTop / yBot);
+    const xt = x0 + i * 60 * (yTop / h);
     const xb = x0 + i * 60;
-    cctvCtx.beginPath(); cctvCtx.moveTo(xt, yTop); cctvCtx.lineTo(xb, yBot); cctvCtx.stroke();
+    cctvCtx.beginPath(); cctvCtx.moveTo(xt, yTop); cctvCtx.lineTo(xb, h); cctvCtx.stroke();
   }
 
-  // Actors based on severity
   drawActors(w, h);
 
-  // Top ambient haze
   const grad = cctvCtx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, "rgba(20, 30, 60, 0.45)");
   grad.addColorStop(1, "rgba(0,0,0,0)");
   cctvCtx.fillStyle = grad;
   cctvCtx.fillRect(0, 0, w, h);
 
-  // Scan lines
   cctvCtx.globalAlpha = 0.06;
-  for (let y = 0; y < h; y += 3) {
-    cctvCtx.fillStyle = "#ffffff";
-    cctvCtx.fillRect(0, y, w, 1);
-  }
+  for (let y = 0; y < h; y += 3) { cctvCtx.fillStyle = "#ffffff"; cctvCtx.fillRect(0, y, w, 1); }
   cctvCtx.globalAlpha = 1;
 
-  // Animated noise
   const noiseDensity = cctvSeverity === "critical" ? 600 : (cctvSeverity === "high" ? 400 : 200);
   cctvCtx.fillStyle = "rgba(255,255,255,0.08)";
   for (let i = 0; i < noiseDensity; i++) {
-    const x = Math.random() * w, y = Math.random() * h;
-    cctvCtx.fillRect(x, y, 1, 1);
+    cctvCtx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
   }
 
-  // Severity tint
   if (cctvSeverity === "critical" || cctvSeverity === "high") {
     cctvCtx.fillStyle = `rgba(255, 57, 86, ${0.04 + Math.sin(cctvTime * 8) * 0.02})`;
     cctvCtx.fillRect(0, 0, w, h);
@@ -387,76 +537,59 @@ function cctvFrame() {
     cctvCtx.fillRect(0, 0, w, h);
   }
 
-  // Update timecode
   const now = new Date();
   $("#cctv-time").textContent = `${now.getUTCFullYear()}-${pad(now.getUTCMonth()+1)}-${pad(now.getUTCDate())} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())}`;
-
   requestAnimationFrame(cctvFrame);
 }
-
 function pad(n) { return String(n).padStart(2, "0"); }
 
 function drawActors(w, h) {
-  // Render 1–2 "subjects" that move horizontally. Scenario type changes behavior.
   const scenario = cctvScenarioId || "";
   const t = cctvTime;
   const isWeapon = scenario.includes("armed") || scenario.includes("weapon");
   const isForced = scenario.includes("forced") || scenario.includes("pry");
   const isLoiter = scenario.includes("loiter");
   const isClear = !isWeapon && !isForced && !isLoiter && scenario;
-
   const ground = h * 0.78;
 
   if (isLoiter) {
-    // One subject lingers near a structure (ATM box)
     cctvCtx.fillStyle = "rgba(140, 150, 170, 0.7)";
-    cctvCtx.fillRect(w * 0.22, ground - 80, 90, 80); // ATM box
+    cctvCtx.fillRect(w * 0.22, ground - 80, 90, 80);
     cctvCtx.fillStyle = "rgba(60, 70, 90, 0.4)";
-    cctvCtx.fillRect(w * 0.22 + 10, ground - 70, 70, 30); // screen
+    cctvCtx.fillRect(w * 0.22 + 10, ground - 70, 70, 30);
     drawSubject(w * 0.45 + Math.sin(t * 0.6) * 10, ground, "#c4d0e5");
   } else if (isForced) {
-    // Two subjects at a door
     cctvCtx.fillStyle = "rgba(80, 80, 90, 0.7)";
-    cctvCtx.fillRect(w * 0.42, ground - 110, 80, 110); // door
+    cctvCtx.fillRect(w * 0.42, ground - 110, 80, 110);
     cctvCtx.fillStyle = "rgba(40, 40, 50, 0.9)";
-    cctvCtx.fillRect(w * 0.48, ground - 70, 4, 6); // doorknob
+    cctvCtx.fillRect(w * 0.48, ground - 70, 4, 6);
     drawSubject(w * 0.55, ground, "#a8b5c8");
     drawSubject(w * 0.36, ground - 4, "#9da9bc");
-    // Crowbar
-    cctvCtx.strokeStyle = "rgba(220, 220, 220, 0.7)";
-    cctvCtx.lineWidth = 2;
-    cctvCtx.beginPath();
-    cctvCtx.moveTo(w * 0.5, ground - 60);
-    cctvCtx.lineTo(w * 0.43, ground - 50);
-    cctvCtx.stroke();
+    cctvCtx.strokeStyle = "rgba(220, 220, 220, 0.7)"; cctvCtx.lineWidth = 2;
+    cctvCtx.beginPath(); cctvCtx.moveTo(w * 0.5, ground - 60); cctvCtx.lineTo(w * 0.43, ground - 50); cctvCtx.stroke();
   } else if (isWeapon) {
-    // Counter + clerk + subject with handgun (small marker)
     cctvCtx.fillStyle = "rgba(80, 90, 110, 0.6)";
-    cctvCtx.fillRect(0, ground - 30, w * 0.55, 30); // counter
-    drawSubject(w * 0.30, ground - 32, "#b8c2d8");  // clerk (hands up shape)
+    cctvCtx.fillRect(0, ground - 30, w * 0.55, 30);
+    drawSubject(w * 0.30, ground - 32, "#b8c2d8");
     cctvCtx.fillStyle = "#b8c2d8";
-    cctvCtx.beginPath(); // clerk hands raised
+    cctvCtx.beginPath();
     cctvCtx.arc(w * 0.30 - 14, ground - 80, 5, 0, Math.PI * 2);
     cctvCtx.arc(w * 0.30 + 14, ground - 80, 5, 0, Math.PI * 2);
     cctvCtx.fill();
-    drawSubject(w * 0.62, ground, "#a0aac0");       // robber
-    // Handgun blip
+    drawSubject(w * 0.62, ground, "#a0aac0");
     cctvCtx.fillStyle = "rgba(255, 80, 80, 0.85)";
     cctvCtx.fillRect(w * 0.55, ground - 56, 6, 4);
   } else if (isClear) {
-    // Commuters walking
     const x1 = (t * 30) % (w + 80) - 40;
     const x2 = ((t + 4) * 22) % (w + 100) - 50;
     drawSubject(x1, ground, "#a8b5c8");
     drawSubject(w - x2, ground - 6, "#9eaabd");
   } else {
-    // Generic empty scene
     drawSubject(w * 0.5 + Math.sin(t * 0.4) * 40, ground, "#a0aac0");
   }
 }
 
 function drawSubject(x, y, color) {
-  // simple human silhouette: head + body
   cctvCtx.fillStyle = color;
   cctvCtx.beginPath();
   cctvCtx.arc(x, y - 80, 10, 0, Math.PI * 2);
@@ -465,7 +598,6 @@ function drawSubject(x, y, color) {
   cctvCtx.fillRect(x - 10, y - 22, 8, 22);
   cctvCtx.fillRect(x + 2, y - 22, 8, 22);
 }
-
 requestAnimationFrame(cctvFrame);
 
 // =================================================================
@@ -476,8 +608,7 @@ function selectCamera(cameraId, incidentId) {
   STATE.selectedCameraId = cameraId;
   const cam = STATE.cameras.get(cameraId);
   if (!cam) return;
-  // Re-render pins for selection styling
-  for (const c of STATE.cameras.values()) projectPin(c);
+  refreshCityPins();
   renderFeed();
 
   $("#d-label").textContent = cam.label || cameraId;
@@ -504,8 +635,7 @@ function renderNoIncident() {
   $("#d-sev-reason").textContent = "—";
   $("#d-findings").innerHTML = "";
   $("#d-trace").innerHTML = "";
-  cctvScenarioId = null;
-  cctvSeverity = "info";
+  cctvScenarioId = null; cctvSeverity = "info";
 }
 
 function renderIncident(inc) {
@@ -519,7 +649,6 @@ function renderIncident(inc) {
     : "VEO 3.1 · synthetic · stub";
 
   $("#d-action").textContent = inc.recommended_action || "—";
-
   $("#d-summary").textContent = inc.scene_summary || "—";
   $("#d-sev-reason").textContent = inc.severity_reasoning || "—";
 
@@ -538,8 +667,7 @@ function renderIncident(inc) {
             <span>${(f.evidence_timestamps || []).join(" · ")}</span>
           </div>
         ` : ""}
-      </li>
-    `;
+      </li>`;
   }).join("");
 
   $("#d-trace").innerHTML = (inc.trace || []).map(t => {
@@ -559,12 +687,6 @@ function formatDetail(d) {
   }).join(", ");
 }
 
-document.querySelectorAll(".detail-actions .action-btn").forEach(b => {
-  b.addEventListener("click", () => {
-    b.style.transform = "scale(0.96)";
-    setTimeout(() => b.style.transform = "", 120);
-  });
-});
 $("#copy-link").addEventListener("click", () => {
   navigator.clipboard?.writeText($("#d-deeplink").value);
   const b = $("#copy-link"); const orig = b.textContent;
@@ -574,14 +696,20 @@ $("#copy-link").addEventListener("click", () => {
 $("#orbit-toggle").addEventListener("click", () => {
   STATE.orbitOn = !STATE.orbitOn;
   $("#orbit-toggle").classList.toggle("active", STATE.orbitOn);
-  if (STATE.orbitOn) startOrbit();
+  if (STATE.mode === "world" && STATE.orbitOn) startWorldOrbit();
 });
 $("#recenter-btn").addEventListener("click", () => {
-  if (!STATE.using3D || !STATE.map3d) return;
+  if (STATE.mode === "world") return;
+  const city = STATE.cities.get(STATE.selectedCityId);
+  if (!city || !STATE.using3D || !STATE.map3d) return;
   try {
-    STATE.map3d.center = { lat: SF.lat, lng: SF.lng, altitude: SF.altitude };
-    STATE.map3d.range = 1400;
-    STATE.map3d.tilt = 62;
+    STATE.map3d.flyCameraTo({
+      endCamera: {
+        center: { lat: city.lat, lng: city.lon, altitude: city.view_altitude || 30 },
+        range: city.view_range || 1500, tilt: city.view_tilt || 62, heading: 25,
+      },
+      durationMillis: 2000,
+    });
   } catch {}
 });
 
@@ -592,32 +720,41 @@ function updateClock() {
   const now = new Date();
   $("#utc-clock").textContent = `${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`;
 }
-setInterval(updateClock, 1000);
-updateClock();
+setInterval(updateClock, 1000); updateClock();
 
 // =================================================================
 // TICK LOOP
 // =================================================================
 
 async function bootstrap() {
-  const status = $("#conn-status");
-  const text = $("#conn-text");
+  const status = $("#conn-status"), text = $("#conn-text");
   try {
-    const r = await fetch("/cameras", { cache: "no-store" });
-    if (!r.ok) throw new Error(`/cameras ${r.status}`);
-    const cams = await r.json();
-    for (const cam of cams) {
-      // map.lng for our internal use; server gives .lon
-      cam.lng = cam.lon;
-      STATE.cameras.set(cam.camera_id, cam);
-      projectPin(cam);
-    }
+    const [camsR, citiesR] = await Promise.all([
+      fetch("/cameras", { cache: "no-store" }),
+      fetch("/cities", { cache: "no-store" }),
+    ]);
+    if (!camsR.ok) throw new Error(`/cameras ${camsR.status}`);
+    const cams = await camsR.json();
+    const cities = citiesR.ok ? await citiesR.json() : [];
+
+    for (const c of cities) STATE.cities.set(c.city_id, c);
+    for (const cam of cams) { cam.lng = cam.lon; STATE.cameras.set(cam.camera_id, cam); }
+
+    recomputeCityState();
     recomputeCounters();
-    renderRoster();
     status.className = "conn-dot online";
     text.textContent = "live";
+
+    if (STATE.using3D) placeCityMarkers();
+
+    $("#locator-coords").textContent = "GLOBAL · 0°N 0°W";
+    $("#locator-sub").textContent = `${STATE.cameras.size} cameras · ${STATE.cities.size} cities`;
+
     const m = location.hash.match(/camera=([\w-]+)/);
-    if (m) selectCamera(m[1]);
+    if (m) {
+      const cam = STATE.cameras.get(m[1]);
+      if (cam) { enterCity(cam.city_id); setTimeout(() => selectCamera(m[1]), 1500); }
+    }
   } catch (e) {
     status.className = "conn-dot offline";
     text.textContent = "broker offline";
@@ -645,10 +782,10 @@ async function tickOnce() {
       cam.pin_color = inc.pin_color;
       cam.severity = inc.severity;
       cam.last_incident_id = inc.incident_id;
-      projectPin(cam);
     }
+    recomputeCityState();
     recomputeCounters();
-    renderRoster();
+    refreshCityPins();
     renderFeed();
 
     $("#conn-status").className = "conn-dot online";
@@ -656,9 +793,8 @@ async function tickOnce() {
       ? `live · gemini ${inc._meta.latency_ms}ms`
       : "live · stub";
 
-    // Auto-select the first non-info incident so the right panel populates.
     if (!STATE.selectedCameraId && inc.severity !== "info") {
-      selectCamera(inc.camera_id, inc.incident_id);
+      // do not auto-enter city; let the user pick
     } else if (STATE.selectedCameraId === inc.camera_id) {
       renderIncident(inc);
       const sevEl = $("#d-sev"); sevEl.className = `sev-pill ${inc.severity}`; sevEl.textContent = inc.severity;
@@ -672,7 +808,18 @@ async function tickOnce() {
 
 function startTickLoop() {
   setInterval(tickOnce, TICK_MS);
-  tickOnce(); // first tick immediately
+  tickOnce();
+}
+
+// Back button (added dynamically below)
+function ensureBackButton() {
+  if ($("#back-btn")) return;
+  const b = document.createElement("button");
+  b.id = "back-btn";
+  b.className = "back-btn";
+  b.innerHTML = `<span>◀</span> back to world`;
+  b.addEventListener("click", exitToWorld);
+  document.querySelector(".map-section").appendChild(b);
 }
 
 // =================================================================
@@ -680,6 +827,7 @@ function startTickLoop() {
 // =================================================================
 
 (async () => {
+  ensureBackButton();
   const ok = await loadMaps3D().catch(err => { console.warn(err); return false; });
   if (!ok) loadFallbackGlobe(STATE.fallbackReason);
   await bootstrap();

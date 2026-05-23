@@ -14,6 +14,10 @@
       "maxDuration": 5,
       "includeFiles": "data/**"
     },
+    "api/cities.py": {
+      "maxDuration": 5,
+      "includeFiles": "data/**"
+    },
     "api/config.py": {
       "maxDuration": 5
     }
@@ -21,6 +25,7 @@
   "rewrites": [
     { "source": "/config.js", "destination": "/api/config" },
     { "source": "/cameras", "destination": "/api/cameras" },
+    { "source": "/cities", "destination": "/api/cities" },
     { "source": "/tick", "destination": "/api/tick" }
   ],
   "headers": [

@@ -1,0 +1,17 @@
+[
+  { "city_id": "sf",  "name": "San Francisco",  "country": "USA",      "lat": 37.78807,  "lon": -122.40760, "view_altitude": 30,  "view_range": 1500, "view_tilt": 62 },
+  { "city_id": "nyc", "name": "New York City",  "country": "USA",      "lat": 40.75872,  "lon": -73.98545,  "view_altitude": 40,  "view_range": 1800, "view_tilt": 65 },
+  { "city_id": "la",  "name": "Los Angeles",    "country": "USA",      "lat": 34.05126,  "lon": -118.25502, "view_altitude": 30,  "view_range": 1500, "view_tilt": 60 },
+  { "city_id": "lon", "name": "London",         "country": "UK",       "lat": 51.50736,  "lon": -0.12776,   "view_altitude": 30,  "view_range": 1600, "view_tilt": 62 },
+  { "city_id": "par", "name": "Paris",          "country": "France",   "lat": 48.85730,  "lon": 2.35260,    "view_altitude": 30,  "view_range": 1500, "view_tilt": 60 },
+  { "city_id": "ber", "name": "Berlin",         "country": "Germany",  "lat": 52.52000,  "lon": 13.40500,   "view_altitude": 30,  "view_range": 1600, "view_tilt": 60 },
+  { "city_id": "tyo", "name": "Tokyo",          "country": "Japan",    "lat": 35.68950,  "lon": 139.69170,  "view_altitude": 35,  "view_range": 1700, "view_tilt": 62 },
+  { "city_id": "hkg", "name": "Hong Kong",      "country": "China",    "lat": 22.28200,  "lon": 114.15890,  "view_altitude": 40,  "view_range": 1800, "view_tilt": 64 },
+  { "city_id": "sin", "name": "Singapore",      "country": "Singapore","lat": 1.28330,   "lon": 103.85170,  "view_altitude": 40,  "view_range": 1800, "view_tilt": 64 },
+  { "city_id": "dxb", "name": "Dubai",          "country": "UAE",      "lat": 25.19720,  "lon": 55.27440,   "view_altitude": 50,  "view_range": 2200, "view_tilt": 65 },
+  { "city_id": "syd", "name": "Sydney",         "country": "Australia","lat": -33.86880, "lon": 151.20930,  "view_altitude": 30,  "view_range": 1500, "view_tilt": 60 },
+  { "city_id": "mex", "name": "Mexico City",    "country": "Mexico",   "lat": 19.43260,  "lon": -99.13320,  "view_altitude": 30,  "view_range": 1500, "view_tilt": 60 },
+  { "city_id": "sao", "name": "São Paulo",      "country": "Brazil",   "lat": -23.55050, "lon": -46.63330,  "view_altitude": 30,  "view_range": 1700, "view_tilt": 60 },
+  { "city_id": "tor", "name": "Toronto",        "country": "Canada",   "lat": 43.65320,  "lon": -79.38320,  "view_altitude": 30,  "view_range": 1500, "view_tilt": 60 },
+  { "city_id": "mum", "name": "Mumbai",         "country": "India",    "lat": 19.07600,  "lon": 72.87770,   "view_altitude": 30,  "view_range": 1500, "view_tilt": 60 }
+]

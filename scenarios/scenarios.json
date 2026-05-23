@@ -1,74 +1,74 @@
 [
   {
-    "id": "scn-clear-day-plaza",
-    "zone_type": "transit_hub",
-    "time_of_day": "day",
-    "expected_activity": "pedestrian throughfare",
-    "narrative": "Commuters crossing the plaza, normal foot traffic, no incidents.",
-    "expected_severity": "info",
-    "skills_expected_to_fire": []
-  },
-  {
-    "id": "scn-loiter-atm-night",
-    "zone_type": "atm",
+    "id": "scn-car-break-in",
+    "zone_type": "parking",
     "time_of_day": "night",
-    "expected_activity": "occasional ATM use",
-    "narrative": "A subject in a dark hoodie lingers near the ATM, repeatedly looking over their shoulder, hands in pockets, for the full duration. No transaction occurs.",
-    "expected_severity": "medium",
-    "skills_expected_to_fire": ["loitering"]
-  },
-  {
-    "id": "scn-forced-entry-storefront",
-    "zone_type": "retail",
-    "time_of_day": "night",
-    "expected_activity": "closed storefront",
-    "narrative": "Two subjects approach a glass storefront. One pries at the door frame with a crowbar while the other watches the street. Glass cracks audibly.",
+    "expected_activity": "parked vehicles",
+    "narrative": "A subject approaches a parked vehicle in a parking lot and attempts to defeat the door — checking handles, peering inside, then working at the window or lock.",
     "expected_severity": "high",
     "skills_expected_to_fire": ["forced_entry"]
   },
   {
-    "id": "scn-armed-robbery-retail",
+    "id": "scn-casing-behavior",
     "zone_type": "retail",
     "time_of_day": "day",
-    "expected_activity": "register transactions",
-    "narrative": "A subject draws a handgun at the register counter. Clerk raises hands. Subject gestures with the firearm.",
-    "expected_severity": "critical",
-    "skills_expected_to_fire": ["weapon_detection"]
+    "expected_activity": "storefront foot traffic",
+    "narrative": "A subject lingers near a storefront, repeatedly glancing inside and at the surroundings. Pacing, returning, checking sightlines — clear casing behavior.",
+    "expected_severity": "medium",
+    "skills_expected_to_fire": ["loitering"]
   },
   {
-    "id": "scn-loiter-and-pry",
-    "zone_type": "alley",
+    "id": "scn-crowd-surge",
+    "zone_type": "transit_hub",
+    "time_of_day": "day",
+    "expected_activity": "busy transit hub",
+    "narrative": "A dense crowd at a transit hub moves rapidly in one direction — a surge event. Tightly packed, some stumbling, signs of pressure build-up.",
+    "expected_severity": "medium",
+    "skills_expected_to_fire": []
+  },
+  {
+    "id": "scn-jaywalking",
+    "zone_type": "transit_hub",
+    "time_of_day": "day",
+    "expected_activity": "pedestrian crossings",
+    "narrative": "A pedestrian crosses a street outside of the marked crosswalk while vehicles are moving. Mild traffic violation, no other criminal activity.",
+    "expected_severity": "low",
+    "skills_expected_to_fire": []
+  },
+  {
+    "id": "scn-loitering",
+    "zone_type": "atm",
     "time_of_day": "night",
-    "expected_activity": "service deliveries",
-    "narrative": "A subject loiters by a back door, then begins working at the lock with a screwdriver.",
-    "expected_severity": "critical",
-    "skills_expected_to_fire": ["loitering", "forced_entry"]
+    "expected_activity": "occasional ATM use",
+    "narrative": "A subject lingers near an ATM or storefront after hours, hands in pockets, glancing around. No transaction. Extended dwell time inconsistent with the zone's normal activity.",
+    "expected_severity": "medium",
+    "skills_expected_to_fire": ["loitering"]
   },
   {
-    "id": "scn-parking-normal",
+    "id": "scn-normal-parking",
     "zone_type": "parking",
     "time_of_day": "day",
     "expected_activity": "vehicles entering and leaving",
-    "narrative": "Routine vehicle movements in a parking lot. Drivers park and walk away.",
+    "narrative": "Routine parking-lot activity. Vehicles arrive, drivers park and walk away normally. Nothing unusual.",
     "expected_severity": "info",
     "skills_expected_to_fire": []
   },
   {
-    "id": "scn-suspicious-lobby",
-    "zone_type": "office_lobby",
-    "time_of_day": "night",
-    "expected_activity": "security desk staffed",
-    "narrative": "A subject tailgates an authorized employee through the turnstile and immediately diverts down a side corridor.",
-    "expected_severity": "low",
-    "skills_expected_to_fire": ["loitering"]
+    "id": "scn-normal-pedestrian",
+    "zone_type": "transit_hub",
+    "time_of_day": "day",
+    "expected_activity": "pedestrian throughfare",
+    "narrative": "Pedestrians cross the camera's field of view at normal walking pace. Routine commute. No incidents.",
+    "expected_severity": "info",
+    "skills_expected_to_fire": []
   },
   {
-    "id": "scn-low-conf-shadow",
-    "zone_type": "alley",
-    "time_of_day": "night",
-    "expected_activity": "empty alley",
-    "narrative": "A figure briefly appears at the edge of the frame, mostly in shadow, holding an indistinct elongated object.",
-    "expected_severity": "low",
-    "skills_expected_to_fire": ["weapon_detection"]
+    "id": "scn-shoplifting",
+    "zone_type": "retail",
+    "time_of_day": "day",
+    "expected_activity": "register transactions",
+    "narrative": "A subject inside a retail store conceals merchandise — sliding items under clothing or into a bag — and moves toward an exit without paying.",
+    "expected_severity": "high",
+    "skills_expected_to_fire": ["loitering"]
   }
 ]

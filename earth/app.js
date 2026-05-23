@@ -210,17 +210,22 @@ function placeCityMarkers() {
   for (const city of STATE.cities.values()) {
     const m = document.createElement("gmp-marker-3d-interactive");
     try {
-      m.position = { lat: city.lat, lng: city.lon, altitude: 100000 };
-      m.altitudeMode = "ABSOLUTE";
+      // Sit on the surface so the globe occludes far-side markers — gives
+      // a real spherical sense rather than dots floating through Earth.
+      m.position = { lat: city.lat, lng: city.lon, altitude: 0 };
+      m.altitudeMode = "RELATIVE_TO_GROUND";
     } catch {}
     const wrap = document.createElement("div");
     wrap.className = `city-marker`;
     wrap.dataset.cityId = city.city_id;
     wrap.innerHTML = `
-      <div class="city-pulse"></div>
-      <div class="city-dot"></div>
-      <div class="city-label">${city.name}</div>
-      <div class="city-count">0</div>
+      <div class="city-glyph">
+        <div class="city-pulse"></div>
+        <div class="city-ring"></div>
+        <div class="city-dot"></div>
+        <div class="city-count">0</div>
+      </div>
+      <div class="city-label">${escapeHtml(city.name)}</div>
     `;
     m.appendChild(wrap);
     m.addEventListener("gmp-click", () => enterCity(city.city_id));
@@ -601,6 +606,51 @@ function drawSubject(x, y, color) {
 requestAnimationFrame(cctvFrame);
 
 // =================================================================
+// VEO CLIP LOADER
+// =================================================================
+
+const CCTV_BOX = document.querySelector(".cctv");
+const CCTV_VIDEO = $("#cctv-video");
+const KNOWN_CLIPS = new Set();
+const MISSING_CLIPS = new Set();
+
+async function loadVeoClipFor(scenarioId, meta) {
+  if (!scenarioId) { useCanvas(meta); return; }
+  if (MISSING_CLIPS.has(scenarioId)) { useCanvas(meta); return; }
+
+  const src = `/clips/${scenarioId}.mp4`;
+  if (KNOWN_CLIPS.has(scenarioId)) { useVideo(src, meta); return; }
+
+  try {
+    const r = await fetch(src, { method: "HEAD" });
+    if (r.ok) { KNOWN_CLIPS.add(scenarioId); useVideo(src, meta); }
+    else { MISSING_CLIPS.add(scenarioId); useCanvas(meta); }
+  } catch { MISSING_CLIPS.add(scenarioId); useCanvas(meta); }
+}
+
+function useVideo(src, meta) {
+  const want = new URL(src, location.href).href;
+  if (CCTV_VIDEO.src !== want) {
+    CCTV_VIDEO.src = src;
+    CCTV_VIDEO.play().catch(() => {});
+  }
+  CCTV_BOX.classList.add("has-video");
+  CCTV_BOX.classList.remove("no-video");
+  $("#cctv-tag").textContent = (meta?.mode === "gemini")
+    ? `VEO 3.1 · real · gemini ${meta.latency_ms}ms`
+    : "VEO 3.1 · real";
+}
+
+function useCanvas(meta) {
+  CCTV_BOX.classList.add("no-video");
+  CCTV_BOX.classList.remove("has-video");
+  try { CCTV_VIDEO.pause(); CCTV_VIDEO.removeAttribute("src"); CCTV_VIDEO.load(); } catch {}
+  $("#cctv-tag").textContent = (meta?.mode === "gemini")
+    ? `VEO 3.1 · synthetic · gemini ${meta.latency_ms}ms`
+    : "VEO 3.1 · synthetic · stub";
+}
+
+// =================================================================
 // DETAIL PANEL
 // =================================================================
 
@@ -644,9 +694,10 @@ function renderIncident(inc) {
 
   $("#cctv-cam-id").textContent = inc.camera_id;
   $("#cctv-scenario").textContent = (inc.scenario_id || "").replace(/^scn-/, "");
-  $("#cctv-tag").textContent = (inc._meta?.mode === "gemini")
-    ? `VEO 3.1 · synthetic · gemini ${inc._meta.latency_ms}ms`
-    : "VEO 3.1 · synthetic · stub";
+
+  // Swap to real Veo MP4 if it exists for this scenario; otherwise fall back
+  // to the procedural canvas display.
+  loadVeoClipFor(inc.scenario_id, inc._meta);
 
   $("#d-action").textContent = inc.recommended_action || "—";
   $("#d-summary").textContent = inc.scene_summary || "—";

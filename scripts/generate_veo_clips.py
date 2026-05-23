@@ -43,7 +43,7 @@ CLIPS_DIR = ROOT / "clips"
 CLIPS_DIR.mkdir(exist_ok=True)
 REFUSALS_PATH = CLIPS_DIR / "refusals.json"
 
-VEO_MODEL = os.environ.get("VEO_MODEL", "veo-3.0-generate-001")
+VEO_MODEL = os.environ.get("VEO_MODEL", "veo-3.1-fast-generate-preview")
 
 
 # Map each scenario to a content-policy-safe prompt that still produces
@@ -146,17 +146,13 @@ def generate(scenario_id: str) -> bool:
     client = genai.Client(api_key=api_key)
 
     try:
-        op = client.models.generate_videos(
-            model=VEO_MODEL,
-            prompt=prompt,
-            config=types.GenerateVideosConfig(
-                aspect_ratio="16:9",
-                duration_seconds=8,
-                number_of_videos=1,
-                negative_prompt="cartoon, illustration, anime, low quality",
-                person_generation="allow_adult",
-            ),
-        )
+        # Build config defensively — Veo 3.1 supports a subset of these.
+        cfg_kwargs = {
+            "aspect_ratio": "16:9",
+            "negative_prompt": "cartoon, illustration, anime, low quality, blurry, watermark, text overlay",
+        }
+        config = types.GenerateVideosConfig(**cfg_kwargs)
+        op = client.models.generate_videos(model=VEO_MODEL, prompt=prompt, config=config)
     except Exception as e:
         msg = str(e)
         log.warning("%s submit failed: %s", scenario_id, msg[:300])

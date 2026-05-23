@@ -31,6 +31,7 @@ cache/
 audit/
 *.mp4
 *.webm
+!clips/*.mp4
 data/runtime_state.json
 
 # OMC local state

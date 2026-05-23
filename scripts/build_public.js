@@ -25,4 +25,20 @@ function copyTree(src, dst) {
 }
 
 copyTree(SRC, OUT);
+
+// Also copy clips/ if present — pre-baked Veo MP4s served as static assets.
+const CLIPS_SRC = path.join(ROOT, "clips");
+if (fs.existsSync(CLIPS_SRC)) {
+  const CLIPS_DST = path.join(OUT, "clips");
+  fs.mkdirSync(CLIPS_DST, { recursive: true });
+  let count = 0;
+  for (const entry of fs.readdirSync(CLIPS_SRC)) {
+    if (entry.endsWith(".mp4")) {
+      fs.copyFileSync(path.join(CLIPS_SRC, entry), path.join(CLIPS_DST, entry));
+      count++;
+    }
+  }
+  console.log(`[sentinel build] copied ${count} Veo clip(s)`);
+}
+
 console.log(`[sentinel build] wrote ${OUT}`);

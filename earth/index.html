@@ -122,8 +122,9 @@
         </div>
       </div>
 
-      <!-- Synthetic CCTV viewport -->
+      <!-- Synthetic CCTV viewport — real Veo MP4 if available, canvas fallback -->
       <div class="cctv">
+        <video id="cctv-video" autoplay muted loop playsinline preload="auto"></video>
         <canvas id="cctv-canvas" width="640" height="360"></canvas>
         <div class="cctv-chrome">
           <div class="cctv-top">

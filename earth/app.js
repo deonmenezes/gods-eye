@@ -756,6 +756,58 @@ function formatDetail(d) {
   }).join(", ");
 }
 
+// ---------- Mute toggle ----------
+function refreshMuteButton() {
+  const btn = $("#mute-toggle");
+  const icon = $("#mute-icon");
+  const label = $("#mute-label");
+  if (STATE.dispatchMuted) {
+    btn.classList.add("muted");
+    icon.textContent = "🔇";
+    label.textContent = "calls muted";
+  } else {
+    btn.classList.remove("muted");
+    icon.textContent = "🔔";
+    label.textContent = "calls on";
+  }
+}
+$("#mute-toggle")?.addEventListener("click", () => {
+  STATE.dispatchMuted = !STATE.dispatchMuted;
+  localStorage.setItem("sentinel_mute_calls", STATE.dispatchMuted ? "1" : "0");
+  refreshMuteButton();
+  showDispatchToast(STATE.dispatchMuted ? "Dispatch calls muted" : "Dispatch calls enabled");
+});
+
+// ---------- Critical alert banner ----------
+const banner = () => $("#alert-banner");
+const alertText = () => $("#alert-text");
+let alertHideTimer = null;
+function flashAlert(inc) {
+  if (!banner()) return;
+  const cam = STATE.cameras.get(inc.camera_id);
+  const city = STATE.cities.get(cam?.city_id);
+  const label = cam?.label || inc.camera_id;
+  const where = city ? `${city.name}` : "";
+  alertText().textContent =
+    `${(inc.severity || "").toUpperCase()} · ${label}${where ? " · " + where : ""} — ` +
+    `${(inc.scene_summary || "").slice(0, 140)}`;
+  banner().classList.add("visible");
+  clearTimeout(alertHideTimer);
+  alertHideTimer = setTimeout(() => banner().classList.remove("visible"), 9000);
+}
+
+// ---------- Auto-fly to incident city (world mode) ----------
+let lastAutoFlyAt = 0;
+function maybeAutoFly(inc) {
+  if (STATE.mode !== "world") return;            // already zoomed in
+  if (Date.now() - lastAutoFlyAt < 25000) return; // throttle
+  if (!STATE.using3D || !STATE.map3d) return;
+  const cam = STATE.cameras.get(inc.camera_id);
+  if (!cam) return;
+  lastAutoFlyAt = Date.now();
+  enterCity(cam.city_id);
+}
+
 $("#copy-link").addEventListener("click", () => {
   navigator.clipboard?.writeText($("#d-deeplink").value);
   const b = $("#copy-link"); const orig = b.textContent;
@@ -766,18 +818,23 @@ $("#copy-link").addEventListener("click", () => {
 // TWILIO DISPATCH
 // =================================================================
 
-const DISPATCH_COOLDOWN_MS = 10 * 60 * 1000;          // 10 minutes per camera
+const DISPATCH_COOLDOWN_MS = 30 * 60 * 1000;          // 30 min per camera
+const GLOBAL_DISPATCH_COOLDOWN_MS = 10 * 60 * 1000;   // and at most 1 call every 10 min total
 const lastDispatchAt = new Map();                     // camera_id -> ts
-const inFlightDispatch = new Set();                   // camera_id
+const inFlightDispatch = new Set();
+let lastGlobalDispatchAt = 0;
+STATE.dispatchMuted = localStorage.getItem("sentinel_mute_calls") === "1";
 
 async function fireDispatch(incident, { manual = false } = {}) {
   if (!incident) return;
   const cid = incident.camera_id;
   if (!cid) return;
+  if (STATE.dispatchMuted && !manual) return;
   if (inFlightDispatch.has(cid)) return;
   if (!manual) {
     const last = lastDispatchAt.get(cid) || 0;
     if (Date.now() - last < DISPATCH_COOLDOWN_MS) return;
+    if (Date.now() - lastGlobalDispatchAt < GLOBAL_DISPATCH_COOLDOWN_MS) return;
   }
   inFlightDispatch.add(cid);
 
@@ -833,8 +890,12 @@ document.querySelectorAll('.detail-actions [data-action="dispatch"]').forEach(bt
     if (!STATE.selectedCameraId) return;
     const cam = STATE.cameras.get(STATE.selectedCameraId);
     const inc = cam?.last_incident_id ? STATE.incidentById.get(cam.last_incident_id) : null;
-    if (inc) fireDispatch(inc, { manual: true });
-    else showDispatchToast("No incident selected", "err");
+    if (!inc) { showDispatchToast("No incident selected", "err"); return; }
+    if (inc._meta?.mode !== "gemini_video") {
+      showDispatchToast("Dispatch requires video-confirmed incident (mode=gemini_video)", "err");
+      return;
+    }
+    fireDispatch(inc, { manual: true });
   });
 });
 
@@ -946,8 +1007,19 @@ async function tickOnce() {
       const sevEl = $("#d-sev"); sevEl.className = `sev-pill ${inc.severity}`; sevEl.textContent = inc.severity;
     }
 
-    // Auto-dispatch on critical incidents (cooldown-gated per camera).
-    if (inc.severity === "critical") fireDispatch(inc);
+    // For video-confirmed critical / high incidents: flash the alert banner,
+    // and if we're still on the world map, fly into the city.
+    const videoConfirmed = inc._meta?.mode === "gemini_video";
+    if (videoConfirmed && (inc.severity === "critical" || inc.severity === "high")) {
+      flashAlert(inc);
+      maybeAutoFly(inc);
+    }
+
+    // Auto-dispatch ONLY when Gemini actually watched the Veo clip and
+    // confirmed a critical incident. Text-only fallback / stub never call.
+    if (inc.severity === "critical" && videoConfirmed) {
+      fireDispatch(inc);
+    }
   } catch (e) {
     $("#conn-status").className = "conn-dot offline";
     $("#conn-text").textContent = "reconnecting…";
@@ -977,6 +1049,7 @@ function ensureBackButton() {
 
 (async () => {
   ensureBackButton();
+  refreshMuteButton();
   const ok = await loadMaps3D().catch(err => { console.warn(err); return false; });
   if (!ok) loadFallbackGlobe(STATE.fallbackReason);
   await bootstrap();

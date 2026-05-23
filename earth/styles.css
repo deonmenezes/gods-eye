@@ -545,6 +545,51 @@ main {
 }
 .deeplink button:hover { color: var(--text); border-color: var(--line-strong); }
 
+/* ============ MUTE BUTTON ============ */
+.mute-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  color: var(--text); padding: 6px 12px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.mute-btn:hover { border-color: var(--line-strong); }
+.mute-btn.muted { color: var(--red); border-color: rgba(255,57,86,0.4); }
+
+/* ============ CRITICAL ALERT BANNER ============ */
+.alert-banner {
+  position: fixed; top: var(--topbar-h); left: 0; right: 0;
+  z-index: 25;
+  background: linear-gradient(90deg, rgba(255, 57, 86, 0.95), rgba(255, 80, 100, 0.85));
+  color: #fff; padding: 0;
+  font-family: var(--font-mono); font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  display: grid; grid-template-columns: 24px 1fr 24px;
+  align-items: stretch;
+  transform: translateY(-100%);
+  transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  box-shadow: 0 8px 30px rgba(255, 57, 86, 0.55);
+  pointer-events: none;
+}
+.alert-banner.visible {
+  transform: translateY(0);
+  animation: alert-pulse 1.6s ease-in-out infinite;
+}
+@keyframes alert-pulse {
+  0%, 100% { box-shadow: 0 8px 30px rgba(255, 57, 86, 0.55); }
+  50% { box-shadow: 0 8px 50px rgba(255, 57, 86, 0.95); }
+}
+.alert-stripe {
+  background: repeating-linear-gradient(45deg,
+    rgba(0,0,0,0.4) 0 6px, rgba(255,255,255,0.2) 6px 12px);
+}
+.alert-body {
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 14px;
+  font-size: 12px;
+}
+.alert-tag { font-size: 13px; }
+#alert-text { color: rgba(255,255,255,0.95); text-transform: none; font-weight: 500; letter-spacing: 0.04em; }
+
 /* ============ DISPATCH TOAST ============ */
 .dispatch-toast {
   position: fixed; bottom: 24px; left: 50%;

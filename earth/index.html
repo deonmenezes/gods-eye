@@ -53,12 +53,25 @@
 
     <div class="status-cluster">
       <div class="utc"><span id="utc-clock">--:--:-- UTC</span></div>
+      <button id="mute-toggle" class="mute-btn" title="Toggle dispatch calls">
+        <span id="mute-icon">🔔</span> <span id="mute-label">calls on</span>
+      </button>
       <div class="status-pill">
         <span id="conn-status" class="conn-dot offline"></span>
         <span id="conn-text">connecting…</span>
       </div>
     </div>
   </header>
+
+  <!-- Flashing alert banner (fires on new critical incidents) -->
+  <div id="alert-banner" class="alert-banner">
+    <div class="alert-stripe"></div>
+    <div class="alert-body">
+      <span class="alert-tag">🚨 CRITICAL</span>
+      <span id="alert-text">—</span>
+    </div>
+    <div class="alert-stripe"></div>
+  </div>
 
   <main>
     <!-- Left: live incident feed -->

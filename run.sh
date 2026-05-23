@@ -16,7 +16,7 @@ fi
 
 # shellcheck disable=SC1091
 source .venv/bin/activate
-python -m pip install --quiet -r requirements.txt
+python -m pip install --quiet -r requirements-local.txt
 
 python -m orchestrator.register_agents
 

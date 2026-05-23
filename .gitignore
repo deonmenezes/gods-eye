@@ -39,3 +39,4 @@ data/runtime_state.json
 # Vercel build output
 public/
 .vercel/
+.vercel

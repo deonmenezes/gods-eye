@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import time
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
-from . import _lib
+sys.path.insert(0, os.path.dirname(__file__))
+import _lib  # bundled neighbor; underscore-prefixed so Vercel doesn't expose it
 
 log = logging.getLogger("api.tick")
 

@@ -11,7 +11,20 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
+def _find_root() -> Path:
+    """Locate the project root by walking up looking for data/cameras.json.
+
+    Vercel bundles function files at /var/task/api/_lib.py with includeFiles
+    placing data/scenarios/agents at /var/task/. Locally it's the repo root.
+    """
+    here = Path(__file__).resolve()
+    for candidate in (here.parents[1], here.parent, *here.parents):
+        if (candidate / "data" / "cameras.json").exists():
+            return candidate
+    return here.parents[1]
+
+
+ROOT = _find_root()
 CAMERAS = json.loads((ROOT / "data" / "cameras.json").read_text())
 SCENARIOS = json.loads((ROOT / "scenarios" / "scenarios.json").read_text())
 

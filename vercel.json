@@ -1,12 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
+  "framework": null,
   "buildCommand": "node scripts/build_public.js",
   "outputDirectory": "public",
   "functions": {
-    "api/tick.py": { "maxDuration": 30, "memory": 512 },
-    "api/cameras.py": { "maxDuration": 5 },
-    "api/config.py": { "maxDuration": 5 }
+    "api/tick.py": {
+      "maxDuration": 30,
+      "memory": 512,
+      "includeFiles": "{data,scenarios,agents}/**"
+    },
+    "api/cameras.py": {
+      "maxDuration": 5,
+      "includeFiles": "data/**"
+    },
+    "api/config.py": {
+      "maxDuration": 5
+    }
   },
   "rewrites": [
     { "source": "/config.js", "destination": "/api/config" },

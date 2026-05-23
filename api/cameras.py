@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import os
+import sys
 from http.server import BaseHTTPRequestHandler
 
-from . import _lib
+sys.path.insert(0, os.path.dirname(__file__))
+import _lib
 
 
 class handler(BaseHTTPRequestHandler):

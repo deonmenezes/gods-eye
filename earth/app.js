@@ -16,10 +16,30 @@ const STATE = {
 
 // ---------- Map bootstrap ----------
 
+function swapToFallback(reason) {
+  if (!STATE.using3D && mapRoot.querySelector(".fallback-notice")) return;
+  console.warn("[sentinel] swapping to 2D fallback:", reason);
+  // Tear down 3D element + any pin children.
+  if (STATE.map3d) {
+    STATE.map3d.remove();
+    STATE.map3d = null;
+  }
+  for (const rec of STATE.pins.values()) {
+    rec.el?.remove();
+    rec.marker3d?.remove();
+  }
+  STATE.pins.clear();
+  STATE.using3D = false;
+  loadFallbackGlobe(reason);
+  for (const cam of STATE.cameras.values()) placePin(cam);
+}
+
 async function loadMaps3D() {
   if (!mapsApiKey) return false;
 
-  // Inject the Google Maps JS API loader.
+  // Google Maps calls this global on key/billing/restriction failures.
+  window.gm_authFailure = () => swapToFallback("auth failure (check key/restrictions/billing)");
+
   await new Promise((resolve, reject) => {
     if (window.google?.maps) return resolve();
     const s = document.createElement("script");
@@ -30,7 +50,6 @@ async function loadMaps3D() {
     document.head.appendChild(s);
   });
 
-  // Wait for the maps3d library to register the custom element.
   try {
     await google.maps.importLibrary("maps3d");
   } catch (e) {
@@ -49,14 +68,29 @@ async function loadMaps3D() {
   el.setAttribute("range", "1800");
   el.setAttribute("default-labels-disabled", "true");
   el.style.width = "100%"; el.style.height = "100%";
+  el.addEventListener("gmp-error", (ev) => swapToFallback(`gmp-error: ${ev?.detail?.message || "unknown"}`));
   mapRoot.appendChild(el);
   STATE.map3d = el;
   STATE.using3D = true;
+
+  // Watchdog: if tiles haven't drawn anything visible in 6s, assume the
+  // Map Tiles API is disabled / unbilled and degrade gracefully.
+  setTimeout(() => {
+    if (!STATE.using3D) return;
+    // Detect Google's error overlay text content (renders inside the element).
+    const text = (el.shadowRoot?.textContent || el.textContent || "");
+    if (/something went wrong|didn.t load google maps/i.test(text)) {
+      swapToFallback("3D tiles error overlay detected");
+    }
+  }, 6000);
+
   return true;
 }
 
-function loadFallbackGlobe() {
-  // Lightweight 2D fallback: a CSS world map gradient + projected pins.
+function loadFallbackGlobe(reason) {
+  // Wipe any existing children so we don't stack fallbacks under a broken 3D map.
+  mapRoot.innerHTML = "";
+
   const fallback = document.createElement("div");
   fallback.style.cssText = `
     width: 100%; height: 100%; position: relative;
@@ -67,9 +101,15 @@ function loadFallbackGlobe() {
   `;
   const note = document.createElement("div");
   note.className = "fallback-notice";
-  note.innerHTML = mapsApiKey
-    ? "3D Tiles unavailable — using 2D fallback. Verify Map Tiles API + billing in Google Cloud Console."
-    : "GOOGLE_MAPS_API_KEY not set in .env — using 2D fallback. Add the key to enable Photorealistic 3D Earth.";
+  let msg;
+  if (reason) {
+    msg = `2D fallback active — ${reason}. Enable Map Tiles API + billing in Google Cloud Console.`;
+  } else if (!mapsApiKey) {
+    msg = "GOOGLE_MAPS_API_KEY not set — using 2D fallback.";
+  } else {
+    msg = "3D Tiles unavailable — using 2D fallback.";
+  }
+  note.textContent = msg;
   fallback.appendChild(note);
 
   const grid = document.createElement("div");

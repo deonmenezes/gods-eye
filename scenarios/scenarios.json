@@ -1,0 +1,74 @@
+[
+  {
+    "id": "scn-clear-day-plaza",
+    "zone_type": "transit_hub",
+    "time_of_day": "day",
+    "expected_activity": "pedestrian throughfare",
+    "narrative": "Commuters crossing the plaza, normal foot traffic, no incidents.",
+    "expected_severity": "info",
+    "skills_expected_to_fire": []
+  },
+  {
+    "id": "scn-loiter-atm-night",
+    "zone_type": "atm",
+    "time_of_day": "night",
+    "expected_activity": "occasional ATM use",
+    "narrative": "A subject in a dark hoodie lingers near the ATM, repeatedly looking over their shoulder, hands in pockets, for the full duration. No transaction occurs.",
+    "expected_severity": "medium",
+    "skills_expected_to_fire": ["loitering"]
+  },
+  {
+    "id": "scn-forced-entry-storefront",
+    "zone_type": "retail",
+    "time_of_day": "night",
+    "expected_activity": "closed storefront",
+    "narrative": "Two subjects approach a glass storefront. One pries at the door frame with a crowbar while the other watches the street. Glass cracks audibly.",
+    "expected_severity": "high",
+    "skills_expected_to_fire": ["forced_entry"]
+  },
+  {
+    "id": "scn-armed-robbery-retail",
+    "zone_type": "retail",
+    "time_of_day": "day",
+    "expected_activity": "register transactions",
+    "narrative": "A subject draws a handgun at the register counter. Clerk raises hands. Subject gestures with the firearm.",
+    "expected_severity": "critical",
+    "skills_expected_to_fire": ["weapon_detection"]
+  },
+  {
+    "id": "scn-loiter-and-pry",
+    "zone_type": "alley",
+    "time_of_day": "night",
+    "expected_activity": "service deliveries",
+    "narrative": "A subject loiters by a back door, then begins working at the lock with a screwdriver.",
+    "expected_severity": "critical",
+    "skills_expected_to_fire": ["loitering", "forced_entry"]
+  },
+  {
+    "id": "scn-parking-normal",
+    "zone_type": "parking",
+    "time_of_day": "day",
+    "expected_activity": "vehicles entering and leaving",
+    "narrative": "Routine vehicle movements in a parking lot. Drivers park and walk away.",
+    "expected_severity": "info",
+    "skills_expected_to_fire": []
+  },
+  {
+    "id": "scn-suspicious-lobby",
+    "zone_type": "office_lobby",
+    "time_of_day": "night",
+    "expected_activity": "security desk staffed",
+    "narrative": "A subject tailgates an authorized employee through the turnstile and immediately diverts down a side corridor.",
+    "expected_severity": "low",
+    "skills_expected_to_fire": ["loitering"]
+  },
+  {
+    "id": "scn-low-conf-shadow",
+    "zone_type": "alley",
+    "time_of_day": "night",
+    "expected_activity": "empty alley",
+    "narrative": "A figure briefly appears at the edge of the frame, mostly in shadow, holding an indistinct elongated object.",
+    "expected_severity": "low",
+    "skills_expected_to_fire": ["weapon_detection"]
+  }
+]

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sentinel — Command Center</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="/config.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◉</span>
+      <span class="name">SENTINEL</span>
+      <span class="subname">global command center</span>
+    </div>
+    <div class="counters">
+      <div class="counter red"><span class="dot"></span><span id="count-red">0</span><span class="lbl">active</span></div>
+      <div class="counter yellow"><span class="dot"></span><span id="count-yellow">0</span><span class="lbl">suspicious</span></div>
+      <div class="counter green"><span class="dot"></span><span id="count-green">0</span><span class="lbl">clear</span></div>
+    </div>
+    <div class="status"><span id="conn-status" class="conn-dot offline"></span><span id="conn-text">connecting…</span></div>
+  </header>
+
+  <main>
+    <div id="map-root"></div>
+    <aside id="detail-panel" class="hidden">
+      <button id="close-detail" aria-label="Close">×</button>
+      <h2 id="d-label">—</h2>
+      <div class="d-row"><span class="d-key">camera</span><span id="d-cam">—</span></div>
+      <div class="d-row"><span class="d-key">zone</span><span id="d-zone">—</span></div>
+      <div class="d-row"><span class="d-key">severity</span><span id="d-sev" class="pill info">info</span></div>
+      <div class="d-row"><span class="d-key">action</span><span id="d-action">—</span></div>
+
+      <h3>Clip</h3>
+      <div id="d-clip" class="clip-frame">
+        <div class="clip-empty">no clip yet</div>
+      </div>
+
+      <h3>Scene</h3>
+      <p id="d-summary" class="scene">—</p>
+
+      <h3>Findings</h3>
+      <ul id="d-findings" class="findings"></ul>
+
+      <h3>Agent trace</h3>
+      <ol id="d-trace" class="trace"></ol>
+
+      <div class="actions">
+        <button class="btn primary" data-action="dispatch">Dispatch</button>
+        <button class="btn" data-action="escalate">Escalate</button>
+        <button class="btn ghost" data-action="false_positive">False positive</button>
+      </div>
+      <div class="deeplink">
+        <input id="d-deeplink" readonly />
+        <button id="copy-link">copy</button>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

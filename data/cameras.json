@@ -1,0 +1,74 @@
+[
+  {
+    "camera_id": "sf-001",
+    "label": "Embarcadero Plaza",
+    "lat": 37.79550,
+    "lon": -122.39430,
+    "altitude": 18,
+    "zone_type": "transit_hub",
+    "city": "San Francisco"
+  },
+  {
+    "camera_id": "sf-002",
+    "label": "Ferry Building East",
+    "lat": 37.79555,
+    "lon": -122.39323,
+    "altitude": 22,
+    "zone_type": "retail",
+    "city": "San Francisco"
+  },
+  {
+    "camera_id": "sf-003",
+    "label": "Market & 3rd ATM",
+    "lat": 37.78699,
+    "lon": -122.40345,
+    "altitude": 14,
+    "zone_type": "atm",
+    "city": "San Francisco"
+  },
+  {
+    "camera_id": "sf-004",
+    "label": "Union Square North",
+    "lat": 37.78807,
+    "lon": -122.40760,
+    "altitude": 20,
+    "zone_type": "retail",
+    "city": "San Francisco"
+  },
+  {
+    "camera_id": "sf-005",
+    "label": "Civic Center Parking",
+    "lat": 37.77990,
+    "lon": -122.41730,
+    "altitude": 12,
+    "zone_type": "parking",
+    "city": "San Francisco"
+  },
+  {
+    "camera_id": "sf-006",
+    "label": "SoMa Alley 12",
+    "lat": 37.78050,
+    "lon": -122.40410,
+    "altitude": 10,
+    "zone_type": "alley",
+    "city": "San Francisco"
+  },
+  {
+    "camera_id": "sf-007",
+    "label": "Mission & 16th BART",
+    "lat": 37.76505,
+    "lon": -122.41972,
+    "altitude": 16,
+    "zone_type": "transit_hub",
+    "city": "San Francisco"
+  },
+  {
+    "camera_id": "sf-008",
+    "label": "Salesforce Tower East Lobby",
+    "lat": 37.78977,
+    "lon": -122.39661,
+    "altitude": 24,
+    "zone_type": "office_lobby",
+    "city": "San Francisco"
+  }
+]

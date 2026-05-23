@@ -1,0 +1,13 @@
+.venv
+.env
+.env.*
+!.env.example
+.omc
+cache
+audit
+tests
+broker
+orchestrator
+run.sh
+*.log
+__pycache__

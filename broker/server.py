@@ -165,9 +165,21 @@ async def events(request: Request) -> EventSourceResponse:
     return EventSourceResponse(gen())
 
 
-# Static assets at /static
+# Serve earth/ assets at the root so paths match the Vercel build (where
+# public/ is served from /). The explicit routes above (/, /config.js, etc.)
+# take precedence over the static mount.
 if EARTH_DIR.exists():
     app.mount("/static", StaticFiles(directory=EARTH_DIR), name="static")
+
+
+@app.get("/styles.css")
+async def styles() -> FileResponse:
+    return FileResponse(EARTH_DIR / "styles.css", media_type="text/css")
+
+
+@app.get("/app.js")
+async def appjs() -> FileResponse:
+    return FileResponse(EARTH_DIR / "app.js", media_type="application/javascript")
 
 
 @app.get("/healthz")
@@ -178,3 +190,54 @@ async def healthz() -> dict:
         "subscribers": len(SUBSCRIBERS),
         "incidents": len(INCIDENTS),
     }
+
+
+@app.get("/tick")
+async def tick(request: Request) -> JSONResponse:
+    """Front-end-compatible tick endpoint that runs one orchestrator step."""
+    from orchestrator import agent_runner, veo_client
+
+    qp = request.query_params
+    cid = qp.get("camera")
+    sid = qp.get("scenario")
+    cameras_list = list(CAMERAS.values())
+    if cid:
+        camera = CAMERAS.get(cid) or cameras_list[0]
+    else:
+        import random as _rnd
+        camera = _rnd.choice(cameras_list)
+    import json as _json
+    scenarios_list = _json.loads((ROOT / "scenarios" / "scenarios.json").read_text())
+    if sid:
+        scenario = next((s for s in scenarios_list if s["id"] == sid), scenarios_list[0])
+    else:
+        import random as _rnd
+        matches = [s for s in scenarios_list if s["zone_type"] == camera.get("zone_type")]
+        pool = matches * 3 + scenarios_list
+        scenario = _rnd.choice(pool)
+
+    mode = os.environ.get("SENTINEL_MODE", "stub")
+    clip_meta = veo_client.get_clip(scenario, camera, mode=mode)
+    incident = agent_runner.run(scenario, camera, clip_meta, mode=mode)
+
+    from orchestrator.severity import pin_color as _pc
+    incident["scenario_id"] = scenario["id"]
+    incident["pin_color"] = _pc(incident["severity"])
+    incident["camera"] = {
+        "lat": camera["lat"],
+        "lon": camera["lon"],
+        "label": camera.get("label", camera["camera_id"]),
+        "zone_type": camera.get("zone_type"),
+        "altitude": camera.get("altitude", 15),
+    }
+    incident["_meta"] = {"mode": mode, "model": None, "latency_ms": 0, "error": None}
+
+    # Update broker's own state so /cameras stays in sync.
+    INCIDENTS[incident["incident_id"]] = incident
+    STATE[camera["camera_id"]].update({
+        "pin_color": incident["pin_color"],
+        "severity": incident["severity"],
+        "last_incident_id": incident["incident_id"],
+        "updated_at": int(time.time() * 1000),
+    })
+    return JSONResponse(incident)

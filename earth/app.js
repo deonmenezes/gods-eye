@@ -190,7 +190,11 @@ async function openDetail(cameraId) {
   const dl = document.getElementById("d-deeplink");
   dl.value = `${location.origin}/#camera=${cameraId}`;
 
-  // Fetch latest incident if available
+  // Prefer cached incident (Vercel has no server-side incident store).
+  if (cam.last_incident_id && INCIDENT_CACHE.has(cam.last_incident_id)) {
+    renderIncident(INCIDENT_CACHE.get(cam.last_incident_id));
+    return;
+  }
   if (cam.last_incident_id) {
     try {
       const r = await fetch(`/incidents/${cam.last_incident_id}`);
@@ -269,42 +273,78 @@ document.querySelectorAll(".actions .btn").forEach(b => {
   });
 });
 
-// ---------- SSE ----------
+// ---------- Tick loop (polls /tick, replaces SSE on Vercel) ----------
 
-function startEventStream() {
-  const es = new EventSource("/events");
+const INCIDENT_CACHE = new Map(); // incident_id -> full incident json
+
+async function bootstrap() {
   const status = document.getElementById("conn-status");
   const text = document.getElementById("conn-text");
-
-  es.onopen = () => { status.className = "conn-dot online"; text.textContent = "live"; };
-  es.onerror = () => { status.className = "conn-dot offline"; text.textContent = "reconnecting…"; };
-
-  es.onmessage = (ev) => {
-    let msg; try { msg = JSON.parse(ev.data); } catch { return; }
-    if (msg.type === "snapshot") {
-      for (const cam of msg.cameras) {
-        STATE.cameras.set(cam.camera_id, cam);
-        placePin(cam);
-      }
-      recomputeCounters();
-      const hash = location.hash;
-      const m = hash.match(/camera=([\w-]+)/);
-      if (m) openDetail(m[1]);
-    } else if (msg.type === "status") {
-      const cam = STATE.cameras.get(msg.camera_id);
-      if (cam) {
-        cam.pin_color = msg.pin_color;
-        cam.severity = msg.severity;
-        cam.last_incident_id = msg.incident_id;
-      }
-      updatePin(msg.camera_id, msg.pin_color);
-      recomputeCounters();
-      const panel = document.getElementById("detail-panel");
-      if (!panel.classList.contains("hidden") && document.getElementById("d-cam").textContent === msg.camera_id) {
-        openDetail(msg.camera_id);
-      }
+  try {
+    const r = await fetch("/cameras", { cache: "no-store" });
+    if (!r.ok) throw new Error(`/cameras ${r.status}`);
+    const cams = await r.json();
+    for (const cam of cams) {
+      STATE.cameras.set(cam.camera_id, cam);
+      placePin(cam);
     }
-  };
+    recomputeCounters();
+    status.className = "conn-dot online";
+    text.textContent = "live";
+    const m = location.hash.match(/camera=([\w-]+)/);
+    if (m) openDetail(m[1]);
+  } catch (e) {
+    status.className = "conn-dot offline";
+    text.textContent = "broker offline";
+    console.error(e);
+  }
+}
+
+async function tickOnce() {
+  const status = document.getElementById("conn-status");
+  const text = document.getElementById("conn-text");
+  // Round-robin through the cameras so every pin is visited.
+  const ids = [...STATE.cameras.keys()];
+  if (!ids.length) return;
+  const cid = ids[STATE.tickCursor % ids.length];
+  STATE.tickCursor = (STATE.tickCursor + 1) % ids.length;
+
+  try {
+    const r = await fetch(`/tick?camera=${encodeURIComponent(cid)}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(`/tick ${r.status}`);
+    const incident = await r.json();
+    INCIDENT_CACHE.set(incident.incident_id, incident);
+    const cam = STATE.cameras.get(incident.camera_id);
+    if (cam) {
+      cam.pin_color = incident.pin_color;
+      cam.severity = incident.severity;
+      cam.last_incident_id = incident.incident_id;
+    }
+    updatePin(incident.camera_id, incident.pin_color);
+    recomputeCounters();
+    status.className = "conn-dot online";
+    text.textContent = incident._meta?.mode === "gemini"
+      ? `live · gemini ${incident._meta.latency_ms}ms`
+      : "live · stub";
+
+    const panel = document.getElementById("detail-panel");
+    if (!panel.classList.contains("hidden")
+        && document.getElementById("d-cam").textContent === incident.camera_id) {
+      renderIncident(incident);
+      document.getElementById("d-sev").className = `pill ${incident.severity}`;
+      document.getElementById("d-sev").textContent = incident.severity;
+    }
+  } catch (e) {
+    status.className = "conn-dot offline";
+    text.textContent = "reconnecting…";
+    console.warn(e);
+  }
+}
+
+function startTickLoop() {
+  STATE.tickCursor = 0;
+  const interval = (cfg.tickIntervalMs && Number(cfg.tickIntervalMs)) || 4000;
+  setInterval(tickOnce, interval);
 }
 
 // ---------- Boot ----------
@@ -312,5 +352,6 @@ function startEventStream() {
 (async () => {
   const ok = await loadMaps3D().catch(err => { console.warn(err); return false; });
   if (!ok) loadFallbackGlobe();
-  startEventStream();
+  await bootstrap();
+  startTickLoop();
 })();

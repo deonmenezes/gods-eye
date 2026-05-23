@@ -1,0 +1,2 @@
+# Vercel serverless functions use only the stdlib (urllib for Gemini calls).
+# This empty file overrides the root requirements.txt to keep cold starts fast.

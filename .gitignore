@@ -35,3 +35,7 @@ data/runtime_state.json
 
 # OMC local state
 .omc/
+
+# Vercel build output
+public/
+.vercel/

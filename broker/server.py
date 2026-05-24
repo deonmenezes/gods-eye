@@ -234,8 +234,15 @@ async def healthz() -> dict:
 
 @app.get("/tick")
 async def tick(request: Request) -> JSONResponse:
-    """Front-end-compatible tick endpoint that runs one orchestrator step."""
-    from orchestrator import agent_runner, veo_client
+    """Front-end-compatible tick endpoint that runs one Sentinel step.
+
+    Routes through Antigravity (real agent in a Google-hosted remote Linux
+    sandbox) when SENTINEL_AGENT=antigravity. Falls through to Gemini with
+    video, then to a deterministic stub if no key is set.
+    """
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT / "api"))
+    import _lib as api_lib  # type: ignore
 
     qp = request.query_params
     cid = qp.get("camera")
@@ -246,33 +253,67 @@ async def tick(request: Request) -> JSONResponse:
     else:
         import random as _rnd
         camera = _rnd.choice(cameras_list)
-    import json as _json
-    scenarios_list = _json.loads((ROOT / "scenarios" / "scenarios.json").read_text())
-    if sid:
-        scenario = next((s for s in scenarios_list if s["id"] == sid), scenarios_list[0])
+    scenario = api_lib.pick_scenario(sid, camera)
+
+    api_key = os.environ.get("GOOGLE_AI_API_KEY", "").strip()
+    use_antigravity = os.environ.get("SENTINEL_AGENT", "").lower() == "antigravity"
+    gemini_model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+
+    t0 = time.time()
+    mode = "stub"
+    error = None
+    video_used = False
+
+    if api_key:
+        if use_antigravity:
+            try:
+                incident = api_lib.call_antigravity(camera, scenario, api_key, timeout=120)
+                incident = api_lib.enrich_incident(incident, camera, scenario)
+                mode = "antigravity"
+            except Exception as e:
+                log.exception("antigravity failed; falling back to gemini")
+                error = f"{type(e).__name__}: {e}"[:300]
+                try:
+                    video_bytes = api_lib.fetch_clip_bytes(scenario["id"], None)
+                    video_used = bool(video_bytes)
+                    incident = api_lib.call_gemini(
+                        camera, scenario, api_key, gemini_model,
+                        video_bytes=video_bytes, timeout=40,
+                    )
+                    incident = api_lib.enrich_incident(incident, camera, scenario)
+                    mode = "gemini_video" if video_used else "gemini"
+                    error = None
+                except Exception as e2:
+                    error = f"{type(e2).__name__}: {e2}"[:300]
+                    incident = api_lib.stub_incident(camera, scenario)
+        else:
+            try:
+                video_bytes = api_lib.fetch_clip_bytes(scenario["id"], None)
+                video_used = bool(video_bytes)
+                incident = api_lib.call_gemini(
+                    camera, scenario, api_key, gemini_model,
+                    video_bytes=video_bytes, timeout=40,
+                )
+                incident = api_lib.enrich_incident(incident, camera, scenario)
+                mode = "gemini_video" if video_used else "gemini"
+            except Exception as e:
+                log.exception("gemini failed")
+                error = f"{type(e).__name__}: {e}"[:300]
+                incident = api_lib.stub_incident(camera, scenario)
     else:
-        import random as _rnd
-        matches = [s for s in scenarios_list if s["zone_type"] == camera.get("zone_type")]
-        pool = matches * 3 + scenarios_list
-        scenario = _rnd.choice(pool)
+        incident = api_lib.stub_incident(camera, scenario)
 
-    mode = os.environ.get("SENTINEL_MODE", "stub")
-    clip_meta = veo_client.get_clip(scenario, camera, mode=mode)
-    incident = agent_runner.run(scenario, camera, clip_meta, mode=mode)
-
-    from orchestrator.severity import pin_color as _pc
-    incident["scenario_id"] = scenario["id"]
-    incident["pin_color"] = _pc(incident["severity"])
-    incident["camera"] = {
-        "lat": camera["lat"],
-        "lon": camera["lon"],
-        "label": camera.get("label", camera["camera_id"]),
-        "zone_type": camera.get("zone_type"),
-        "altitude": camera.get("altitude", 15),
+    incident["_meta"] = {
+        "mode": mode,
+        "latency_ms": int((time.time() - t0) * 1000),
+        "model": (
+            "antigravity-preview-05-2026" if mode == "antigravity"
+            else (gemini_model if mode.startswith("gemini") else None)
+        ),
+        "video": video_used,
+        "error": error,
     }
-    incident["_meta"] = {"mode": mode, "model": None, "latency_ms": 0, "error": None}
 
-    # Update broker's own state so /cameras stays in sync.
     INCIDENTS[incident["incident_id"]] = incident
     STATE[camera["camera_id"]].update({
         "pin_color": incident["pin_color"],

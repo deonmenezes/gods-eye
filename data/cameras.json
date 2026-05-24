@@ -2,12 +2,13 @@
   {
     "camera_id": "sf-shoplift-01",
     "city_id": "sf",
-    "label": "Union Square — Macy's Flagship",
+    "label": "Union Square \u2014 Macy's Flagship",
     "lat": 37.78807,
-    "lon": -122.40760,
+    "lon": -122.4076,
     "altitude": 22,
     "zone_type": "retail",
-    "pinned_scenario": "scn-shoplifting"
+    "pinned_scenario": "scn-shoplifting",
+    "agent_id": "stub-agent-sf-shoplift-01"
   },
   {
     "camera_id": "nyc-surge-01",
@@ -17,127 +18,139 @@
     "lon": -73.98545,
     "altitude": 22,
     "zone_type": "transit_hub",
-    "pinned_scenario": "scn-crowd-surge"
+    "pinned_scenario": "scn-crowd-surge",
+    "agent_id": "stub-agent-nyc-surge-01"
   },
   {
     "camera_id": "lon-vehicle-01",
     "city_id": "lon",
     "label": "King's Cross Underground Parking",
-    "lat": 51.53080,
-    "lon": -0.12380,
+    "lat": 51.5308,
+    "lon": -0.1238,
     "altitude": 12,
     "zone_type": "parking",
-    "pinned_scenario": "scn-car-break-in"
+    "pinned_scenario": "scn-car-break-in",
+    "agent_id": "stub-agent-lon-vehicle-01"
   },
   {
     "camera_id": "par-casing-01",
     "city_id": "par",
     "label": "Galeries Lafayette North Entrance",
-    "lat": 48.87370,
-    "lon": 2.33240,
+    "lat": 48.8737,
+    "lon": 2.3324,
     "altitude": 20,
     "zone_type": "retail",
-    "pinned_scenario": "scn-casing-behavior"
+    "pinned_scenario": "scn-casing-behavior",
+    "agent_id": "stub-agent-par-casing-01"
   },
   {
     "camera_id": "tyo-loiter-01",
     "city_id": "tyo",
     "label": "Shibuya ATM Vestibule",
     "lat": 35.65956,
-    "lon": 139.70060,
+    "lon": 139.7006,
     "altitude": 14,
     "zone_type": "atm",
-    "pinned_scenario": "scn-loitering"
+    "pinned_scenario": "scn-loitering",
+    "agent_id": "stub-agent-tyo-loiter-01"
   },
   {
     "camera_id": "dxb-flow-01",
     "city_id": "dxb",
     "label": "Burj Khalifa Lobby Pedestrian Flow",
-    "lat": 25.19720,
-    "lon": 55.27440,
+    "lat": 25.1972,
+    "lon": 55.2744,
     "altitude": 28,
     "zone_type": "transit_hub",
-    "pinned_scenario": "scn-normal-pedestrian"
+    "pinned_scenario": "scn-normal-pedestrian",
+    "agent_id": "stub-agent-dxb-flow-01"
   },
   {
     "camera_id": "syd-jaywalk-01",
     "city_id": "syd",
     "label": "Pitt Street Mall Crossing",
-    "lat": -33.86990,
-    "lon": 151.20760,
+    "lat": -33.8699,
+    "lon": 151.2076,
     "altitude": 16,
     "zone_type": "transit_hub",
-    "pinned_scenario": "scn-jaywalking"
+    "pinned_scenario": "scn-jaywalking",
+    "agent_id": "stub-agent-syd-jaywalk-01"
   },
   {
     "camera_id": "sao-park-01",
     "city_id": "sao",
     "label": "Av Paulista Underground Lot",
-    "lat": -23.55610,
-    "lon": -46.66120,
+    "lat": -23.5561,
+    "lon": -46.6612,
     "altitude": 14,
     "zone_type": "parking",
-    "pinned_scenario": "scn-normal-parking"
+    "pinned_scenario": "scn-normal-parking",
+    "agent_id": "stub-agent-sao-park-01"
   },
-
   {
     "camera_id": "la-fight-01",
     "city_id": "la",
     "label": "Hollywood Boulevard Plaza",
-    "lat": 34.10180,
-    "lon": -118.33950,
+    "lat": 34.1018,
+    "lon": -118.3395,
     "altitude": 18,
     "zone_type": "transit_hub",
-    "pinned_scenario": "scn-fight"
+    "pinned_scenario": "scn-fight",
+    "agent_id": "stub-agent-la-fight-01"
   },
   {
     "camera_id": "ber-snatch-01",
     "city_id": "ber",
     "label": "Alexanderplatz Sidewalk",
-    "lat": 52.52160,
-    "lon": 13.41370,
+    "lat": 52.5216,
+    "lon": 13.4137,
     "altitude": 18,
     "zone_type": "transit_hub",
-    "pinned_scenario": "scn-bag-snatch"
+    "pinned_scenario": "scn-bag-snatch",
+    "agent_id": "stub-agent-ber-snatch-01"
   },
   {
     "camera_id": "hkg-smash-01",
     "city_id": "hkg",
     "label": "Central Pier 7 Parking",
-    "lat": 22.28200,
-    "lon": 114.15890,
+    "lat": 22.282,
+    "lon": 114.1589,
     "altitude": 14,
     "zone_type": "parking",
-    "pinned_scenario": "scn-smash-grab"
+    "pinned_scenario": "scn-smash-grab",
+    "agent_id": "stub-agent-hkg-smash-01"
   },
   {
     "camera_id": "sin-trespass-01",
     "city_id": "sin",
     "label": "Marina Bay Perimeter Fence",
-    "lat": 1.28330,
-    "lon": 103.86070,
+    "lat": 1.2833,
+    "lon": 103.8607,
     "altitude": 16,
     "zone_type": "alley",
-    "pinned_scenario": "scn-trespass-fence"
+    "pinned_scenario": "scn-trespass-fence",
+    "agent_id": "stub-agent-sin-trespass-01"
   },
   {
     "camera_id": "mex-veh-01",
     "city_id": "mex",
     "label": "Polanco Underground Garage",
-    "lat": 19.43360,
-    "lon": -99.19620,
+    "lat": 19.4336,
+    "lon": -99.1962,
     "altitude": 12,
     "zone_type": "parking",
-    "pinned_scenario": "scn-vehicle-theft"
+    "pinned_scenario": "scn-vehicle-theft",
+    "agent_id": "stub-agent-mex-veh-01"
   },
   {
     "camera_id": "mum-medical-01",
     "city_id": "mum",
     "label": "Chhatrapati Shivaji Terminus Hall 2",
-    "lat": 18.94000,
-    "lon": 72.83560,
+    "lat": 18.94,
+    "lon": 72.8356,
     "altitude": 22,
     "zone_type": "transit_hub",
-    "pinned_scenario": "scn-medical-collapse"
+    "pinned_scenario": "scn-medical-collapse",
+    "agent_id": "stub-agent-mum-medical-01"
   }
 ]

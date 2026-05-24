@@ -38,6 +38,7 @@ log = logging.getLogger("broker")
 EARTH_DIR = ROOT / "earth"
 DATA_DIR = ROOT / "data"
 AUDIT_DIR = ROOT / "audit"
+CLIPS_DIR = ROOT / "clips"
 
 CAMERAS = {c["camera_id"]: c for c in json.loads((DATA_DIR / "cameras.json").read_text())}
 
@@ -90,6 +91,11 @@ async def dashboard() -> FileResponse:
     return FileResponse(EARTH_DIR / "dashboard.html")
 
 
+@app.get("/footage")
+async def footage() -> FileResponse:
+    return FileResponse(EARTH_DIR / "footage.html")
+
+
 @app.get("/landing.css")
 async def landing_css() -> FileResponse:
     return FileResponse(EARTH_DIR / "landing.css", media_type="text/css")
@@ -98,6 +104,16 @@ async def landing_css() -> FileResponse:
 @app.get("/landing.js")
 async def landing_js() -> FileResponse:
     return FileResponse(EARTH_DIR / "landing.js", media_type="application/javascript")
+
+
+@app.get("/footage.css")
+async def footage_css() -> FileResponse:
+    return FileResponse(EARTH_DIR / "footage.css", media_type="text/css")
+
+
+@app.get("/footage.js")
+async def footage_js() -> FileResponse:
+    return FileResponse(EARTH_DIR / "footage.js", media_type="application/javascript")
 
 
 @app.get("/config.js")
@@ -190,6 +206,10 @@ async def events(request: Request) -> EventSourceResponse:
 # take precedence over the static mount.
 if EARTH_DIR.exists():
     app.mount("/static", StaticFiles(directory=EARTH_DIR), name="static")
+
+# Local-dev parity with Vercel, where public/clips/ is served from /clips.
+if CLIPS_DIR.exists():
+    app.mount("/clips", StaticFiles(directory=CLIPS_DIR), name="clips")
 
 
 @app.get("/styles.css")

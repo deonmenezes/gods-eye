@@ -1,70 +1,82 @@
 [
-  { "camera_id": "sf-001", "city_id": "sf",  "label": "Embarcadero Plaza",            "lat": 37.79550,  "lon": -122.39430, "altitude": 18, "zone_type": "transit_hub" },
-  { "camera_id": "sf-002", "city_id": "sf",  "label": "Ferry Building East",          "lat": 37.79555,  "lon": -122.39323, "altitude": 22, "zone_type": "retail" },
-  { "camera_id": "sf-003", "city_id": "sf",  "label": "Market & 3rd ATM",             "lat": 37.78699,  "lon": -122.40345, "altitude": 14, "zone_type": "atm" },
-  { "camera_id": "sf-004", "city_id": "sf",  "label": "Union Square North",           "lat": 37.78807,  "lon": -122.40760, "altitude": 20, "zone_type": "retail" },
-  { "camera_id": "sf-005", "city_id": "sf",  "label": "Salesforce Tower Lobby",       "lat": 37.78977,  "lon": -122.39661, "altitude": 24, "zone_type": "office_lobby" },
-
-  { "camera_id": "nyc-001", "city_id": "nyc", "label": "Times Square North",          "lat": 40.75872,  "lon": -73.98545,  "altitude": 22, "zone_type": "transit_hub" },
-  { "camera_id": "nyc-002", "city_id": "nyc", "label": "Grand Central Concourse",     "lat": 40.75289,  "lon": -73.97714,  "altitude": 18, "zone_type": "transit_hub" },
-  { "camera_id": "nyc-003", "city_id": "nyc", "label": "Bryant Park ATM",             "lat": 40.75383,  "lon": -73.98353,  "altitude": 12, "zone_type": "atm" },
-  { "camera_id": "nyc-004", "city_id": "nyc", "label": "Hudson Yards Plaza",          "lat": 40.75370,  "lon": -74.00190,  "altitude": 26, "zone_type": "retail" },
-  { "camera_id": "nyc-005", "city_id": "nyc", "label": "Penn Station Service Alley",  "lat": 40.75050,  "lon": -73.99350,  "altitude": 10, "zone_type": "alley" },
-
-  { "camera_id": "la-001", "city_id": "la",  "label": "Hollywood & Highland",          "lat": 34.10180,  "lon": -118.33950, "altitude": 18, "zone_type": "retail" },
-  { "camera_id": "la-002", "city_id": "la",  "label": "Union Station West",            "lat": 34.05623,  "lon": -118.23652, "altitude": 16, "zone_type": "transit_hub" },
-  { "camera_id": "la-003", "city_id": "la",  "label": "Pershing Square Garage",        "lat": 34.04823,  "lon": -118.25340, "altitude": 12, "zone_type": "parking" },
-  { "camera_id": "la-004", "city_id": "la",  "label": "Grand Central Market ATM",      "lat": 34.05060,  "lon": -118.24870, "altitude": 14, "zone_type": "atm" },
-
-  { "camera_id": "lon-001", "city_id": "lon", "label": "King's Cross Concourse",       "lat": 51.53080,  "lon": -0.12380,   "altitude": 20, "zone_type": "transit_hub" },
-  { "camera_id": "lon-002", "city_id": "lon", "label": "Piccadilly Circus",            "lat": 51.51000,  "lon": -0.13440,   "altitude": 18, "zone_type": "retail" },
-  { "camera_id": "lon-003", "city_id": "lon", "label": "The Shard South Lobby",        "lat": 51.50450,  "lon": -0.08650,   "altitude": 30, "zone_type": "office_lobby" },
-  { "camera_id": "lon-004", "city_id": "lon", "label": "Camden Lock Alley",            "lat": 51.54170,  "lon": -0.14660,   "altitude": 10, "zone_type": "alley" },
-
-  { "camera_id": "par-001", "city_id": "par", "label": "Gare du Nord West",            "lat": 48.88090,  "lon": 2.35530,    "altitude": 18, "zone_type": "transit_hub" },
-  { "camera_id": "par-002", "city_id": "par", "label": "Champs-Élysées 75",            "lat": 48.86950,  "lon": 2.30760,    "altitude": 20, "zone_type": "retail" },
-  { "camera_id": "par-003", "city_id": "par", "label": "Place de la Concorde ATM",     "lat": 48.86560,  "lon": 2.32130,    "altitude": 14, "zone_type": "atm" },
-  { "camera_id": "par-004", "city_id": "par", "label": "Marais Service Alley",         "lat": 48.85730,  "lon": 2.36280,    "altitude": 10, "zone_type": "alley" },
-
-  { "camera_id": "ber-001", "city_id": "ber", "label": "Brandenburger Tor East",       "lat": 52.51640,  "lon": 13.37770,   "altitude": 20, "zone_type": "transit_hub" },
-  { "camera_id": "ber-002", "city_id": "ber", "label": "Alexanderplatz Mall",          "lat": 52.52160,  "lon": 13.41370,   "altitude": 18, "zone_type": "retail" },
-  { "camera_id": "ber-003", "city_id": "ber", "label": "Kottbusser Tor U-Bahn",        "lat": 52.49930,  "lon": 13.41770,   "altitude": 14, "zone_type": "transit_hub" },
-  { "camera_id": "ber-004", "city_id": "ber", "label": "Friedrichstraße ATM",          "lat": 52.52000,  "lon": 13.38760,   "altitude": 12, "zone_type": "atm" },
-
-  { "camera_id": "tyo-001", "city_id": "tyo", "label": "Shibuya Scramble Crossing",    "lat": 35.65956,  "lon": 139.70060,  "altitude": 22, "zone_type": "transit_hub" },
-  { "camera_id": "tyo-002", "city_id": "tyo", "label": "Tokyo Station Marunouchi",     "lat": 35.68130,  "lon": 139.76680,  "altitude": 20, "zone_type": "transit_hub" },
-  { "camera_id": "tyo-003", "city_id": "tyo", "label": "Akihabara Electric Town",      "lat": 35.69830,  "lon": 139.77310,  "altitude": 18, "zone_type": "retail" },
-  { "camera_id": "tyo-004", "city_id": "tyo", "label": "Roppongi Hills Lobby",         "lat": 35.66070,  "lon": 139.72920,  "altitude": 26, "zone_type": "office_lobby" },
-
-  { "camera_id": "hkg-001", "city_id": "hkg", "label": "Central MTR Exit A",           "lat": 22.28200,  "lon": 114.15890,  "altitude": 18, "zone_type": "transit_hub" },
-  { "camera_id": "hkg-002", "city_id": "hkg", "label": "Causeway Bay Times Square",    "lat": 22.27970,  "lon": 114.18190,  "altitude": 22, "zone_type": "retail" },
-  { "camera_id": "hkg-003", "city_id": "hkg", "label": "Mong Kok Service Alley",       "lat": 22.31920,  "lon": 114.16940,  "altitude": 10, "zone_type": "alley" },
-
-  { "camera_id": "sin-001", "city_id": "sin", "label": "Marina Bay Sands North",       "lat": 1.28330,   "lon": 103.86070,  "altitude": 26, "zone_type": "retail" },
-  { "camera_id": "sin-002", "city_id": "sin", "label": "Raffles Place MRT",            "lat": 1.28430,   "lon": 103.85160,  "altitude": 20, "zone_type": "transit_hub" },
-  { "camera_id": "sin-003", "city_id": "sin", "label": "Orchard Road ATM",             "lat": 1.30330,   "lon": 103.83180,  "altitude": 14, "zone_type": "atm" },
-
-  { "camera_id": "dxb-001", "city_id": "dxb", "label": "Burj Khalifa Lobby",           "lat": 25.19720,  "lon": 55.27440,   "altitude": 32, "zone_type": "office_lobby" },
-  { "camera_id": "dxb-002", "city_id": "dxb", "label": "Dubai Mall North Entrance",    "lat": 25.19720,  "lon": 55.27960,   "altitude": 24, "zone_type": "retail" },
-  { "camera_id": "dxb-003", "city_id": "dxb", "label": "DMCC Metro Station",           "lat": 25.07120,  "lon": 55.13900,   "altitude": 18, "zone_type": "transit_hub" },
-
-  { "camera_id": "syd-001", "city_id": "syd", "label": "Circular Quay Wharf 2",        "lat": -33.86120, "lon": 151.21080,  "altitude": 16, "zone_type": "transit_hub" },
-  { "camera_id": "syd-002", "city_id": "syd", "label": "Pitt Street Mall ATM",         "lat": -33.86990, "lon": 151.20760,  "altitude": 14, "zone_type": "atm" },
-  { "camera_id": "syd-003", "city_id": "syd", "label": "Kings Cross Alley",            "lat": -33.87370, "lon": 151.22250,  "altitude": 10, "zone_type": "alley" },
-
-  { "camera_id": "mex-001", "city_id": "mex", "label": "Zócalo Metro Exit",            "lat": 19.43260,  "lon": -99.13320,  "altitude": 18, "zone_type": "transit_hub" },
-  { "camera_id": "mex-002", "city_id": "mex", "label": "Polanco Mall ATM",             "lat": 19.43360,  "lon": -99.19620,  "altitude": 14, "zone_type": "atm" },
-  { "camera_id": "mex-003", "city_id": "mex", "label": "Roma Norte Storefront",        "lat": 19.41440,  "lon": -99.16410,  "altitude": 16, "zone_type": "retail" },
-
-  { "camera_id": "sao-001", "city_id": "sao", "label": "Av Paulista 1500",             "lat": -23.55610, "lon": -46.66120,  "altitude": 22, "zone_type": "retail" },
-  { "camera_id": "sao-002", "city_id": "sao", "label": "Sé Metro Station",             "lat": -23.55050, "lon": -46.63330,  "altitude": 18, "zone_type": "transit_hub" },
-  { "camera_id": "sao-003", "city_id": "sao", "label": "Vila Madalena Alley",          "lat": -23.54380, "lon": -46.69150,  "altitude": 10, "zone_type": "alley" },
-
-  { "camera_id": "tor-001", "city_id": "tor", "label": "Union Station East",           "lat": 43.64530,  "lon": -79.38080,  "altitude": 18, "zone_type": "transit_hub" },
-  { "camera_id": "tor-002", "city_id": "tor", "label": "Eaton Centre Mall",            "lat": 43.65420,  "lon": -79.38050,  "altitude": 22, "zone_type": "retail" },
-  { "camera_id": "tor-003", "city_id": "tor", "label": "Yonge-Dundas ATM",             "lat": 43.65610,  "lon": -79.38020,  "altitude": 14, "zone_type": "atm" },
-
-  { "camera_id": "mum-001", "city_id": "mum", "label": "Chhatrapati Shivaji Terminus", "lat": 18.94000,  "lon": 72.83560,   "altitude": 22, "zone_type": "transit_hub" },
-  { "camera_id": "mum-002", "city_id": "mum", "label": "Bandra-Kurla Complex Lobby",   "lat": 19.07600,  "lon": 72.87770,   "altitude": 28, "zone_type": "office_lobby" },
-  { "camera_id": "mum-003", "city_id": "mum", "label": "Linking Road Storefront",      "lat": 19.06330,  "lon": 72.83440,   "altitude": 16, "zone_type": "retail" }
+  {
+    "camera_id": "sf-shoplift-01",
+    "city_id": "sf",
+    "label": "Union Square — Macy's Flagship",
+    "lat": 37.78807,
+    "lon": -122.40760,
+    "altitude": 22,
+    "zone_type": "retail",
+    "pinned_scenario": "scn-shoplifting"
+  },
+  {
+    "camera_id": "nyc-surge-01",
+    "city_id": "nyc",
+    "label": "Times Square Subway Mezzanine",
+    "lat": 40.75872,
+    "lon": -73.98545,
+    "altitude": 22,
+    "zone_type": "transit_hub",
+    "pinned_scenario": "scn-crowd-surge"
+  },
+  {
+    "camera_id": "lon-vehicle-01",
+    "city_id": "lon",
+    "label": "King's Cross Underground Parking",
+    "lat": 51.53080,
+    "lon": -0.12380,
+    "altitude": 12,
+    "zone_type": "parking",
+    "pinned_scenario": "scn-car-break-in"
+  },
+  {
+    "camera_id": "par-casing-01",
+    "city_id": "par",
+    "label": "Galeries Lafayette North Entrance",
+    "lat": 48.87370,
+    "lon": 2.33240,
+    "altitude": 20,
+    "zone_type": "retail",
+    "pinned_scenario": "scn-casing-behavior"
+  },
+  {
+    "camera_id": "tyo-loiter-01",
+    "city_id": "tyo",
+    "label": "Shibuya ATM Vestibule",
+    "lat": 35.65956,
+    "lon": 139.70060,
+    "altitude": 14,
+    "zone_type": "atm",
+    "pinned_scenario": "scn-loitering"
+  },
+  {
+    "camera_id": "dxb-flow-01",
+    "city_id": "dxb",
+    "label": "Burj Khalifa Lobby Pedestrian Flow",
+    "lat": 25.19720,
+    "lon": 55.27440,
+    "altitude": 28,
+    "zone_type": "transit_hub",
+    "pinned_scenario": "scn-normal-pedestrian"
+  },
+  {
+    "camera_id": "syd-jaywalk-01",
+    "city_id": "syd",
+    "label": "Pitt Street Mall Crossing",
+    "lat": -33.86990,
+    "lon": 151.20760,
+    "altitude": 16,
+    "zone_type": "transit_hub",
+    "pinned_scenario": "scn-jaywalking"
+  },
+  {
+    "camera_id": "sao-park-01",
+    "city_id": "sao",
+    "label": "Av Paulista Underground Lot",
+    "lat": -23.55610,
+    "lon": -46.66120,
+    "altitude": 14,
+    "zone_type": "parking",
+    "pinned_scenario": "scn-normal-parking"
+  }
 ]

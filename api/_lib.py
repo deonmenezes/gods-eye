@@ -63,9 +63,20 @@ def pick_camera(camera_id: str | None) -> dict:
 
 
 def pick_scenario(scenario_id: str | None, camera: dict) -> dict:
+    """Pick a scenario for this camera.
+
+    - If the caller specified a scenario_id, use it.
+    - Else if the camera has a pinned_scenario, ALWAYS use it (1:1 binding).
+    - Else weight by zone_type match against the global scenario pool.
+    """
     if scenario_id:
         for s in SCENARIOS:
             if s["id"] == scenario_id:
+                return s
+    pinned = camera.get("pinned_scenario")
+    if pinned:
+        for s in SCENARIOS:
+            if s["id"] == pinned:
                 return s
     matches = [s for s in SCENARIOS if s["zone_type"] == camera["zone_type"]]
     pool = matches * 3 + SCENARIOS

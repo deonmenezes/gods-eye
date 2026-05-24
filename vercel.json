@@ -36,7 +36,8 @@
     { "source": "/dispatch", "destination": "/api/dispatch" },
     { "source": "/twiml", "destination": "/api/twiml" },
     { "source": "/connect", "destination": "/connect.html" },
-    { "source": "/dashboard", "destination": "/dashboard.html" }
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/footage", "destination": "/footage.html" }
   ],
   "headers": [
     {

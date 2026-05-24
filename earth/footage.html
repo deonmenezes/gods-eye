@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZECURITY — All footage · live wall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing.css" />
+  <link rel="stylesheet" href="/footage.css" />
+</head>
+<body class="footage">
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <!-- Topbar -->
+  <header class="ftg-top">
+    <a class="logo" href="/">
+      <span class="logo-mark">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="9"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="logo-word">ZECURITY</span>
+      <span class="logo-sep">/</span>
+      <span class="logo-page">ALL FOOTAGE · LIVE</span>
+    </a>
+
+    <nav class="ftg-nav">
+      <a href="/" class="ftg-nav-link">Landing</a>
+      <a href="/dashboard" class="ftg-nav-link">Command center</a>
+      <a href="/footage" class="ftg-nav-link active">All footage</a>
+    </nav>
+
+    <div class="ftg-meta">
+      <div class="ftg-meta-pill">
+        <span class="rec-dot"></span>
+        <span id="ftg-count">12 / 12 feeds online</span>
+      </div>
+      <div class="ftg-meta-pill">
+        <span class="ftg-clock-icon">◐</span>
+        <span id="ftg-clock">--:--:-- UTC</span>
+      </div>
+      <div class="ftg-controls">
+        <button id="ftg-mute" class="ftg-btn" title="Audio is off by default — browsers block autoplay sound">🔇 mute</button>
+        <button id="ftg-pause" class="ftg-btn" title="Pause/play all">⏸ pause all</button>
+        <button id="ftg-fullscreen" class="ftg-btn" title="Fullscreen">⛶</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter strip -->
+  <div class="ftg-filters">
+    <button class="ftg-filter active" data-filter="all">All <span>12</span></button>
+    <button class="ftg-filter" data-filter="active">● Active <span class="dot-red">3</span></button>
+    <button class="ftg-filter" data-filter="suspicious">● Suspicious <span class="dot-yellow">2</span></button>
+    <button class="ftg-filter" data-filter="nominal">● Nominal <span class="dot-green">7</span></button>
+    <div class="ftg-filter-spacer"></div>
+    <div class="ftg-search">
+      <input id="ftg-search" type="text" placeholder="Search location, city, or scenario…" />
+    </div>
+  </div>
+
+  <!-- 6-column wall -->
+  <main class="ftg-wall" id="ftg-wall">
+    <!-- Tiles injected by JS -->
+  </main>
+
+  <!-- Status footer -->
+  <footer class="ftg-footer">
+    <div class="ftg-foot-row">
+      <div>
+        <span class="ftg-foot-key">storage</span>
+        <span class="ftg-foot-val">ephemeral · 0 bytes retained</span>
+      </div>
+      <div>
+        <span class="ftg-foot-key">agents</span>
+        <span class="ftg-foot-val">12 × gemini · 1 sandbox per feed</span>
+      </div>
+      <div>
+        <span class="ftg-foot-key">throughput</span>
+        <span class="ftg-foot-val mono" id="ftg-thru">— fps · — mbps</span>
+      </div>
+      <div>
+        <span class="ftg-foot-key">last incident</span>
+        <span class="ftg-foot-val mono" id="ftg-last">awaiting…</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/footage.js"></script>
+</body>
+</html>

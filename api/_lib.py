@@ -151,6 +151,8 @@ def apply_severity_rules(findings: list[dict]) -> tuple[str, str, bool]:
 # ---------- Gemini call (REST, no SDK to keep cold-start small) ----------
 
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+ANTIGRAVITY_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions?key={key}"
+ANTIGRAVITY_AGENT = "antigravity-preview-05-2026"
 
 
 def _gemini_prompt(camera: dict, scenario: dict, has_video: bool = False) -> str:
@@ -250,6 +252,46 @@ def call_gemini(
         payload = json.loads(r.read())
     text = payload["candidates"][0]["content"]["parts"][0]["text"]
     text = _strip_fences(text)
+    return json.loads(text)
+
+
+def call_antigravity(
+    camera: dict,
+    scenario: dict,
+    api_key: str,
+    timeout: float = 60.0,
+) -> dict:
+    """Call the Antigravity Agent (real PRD architecture).
+
+    Each interaction spins up an ephemeral Google-hosted Linux sandbox bound to
+    the antigravity-preview-05-2026 model. We inline the full AGENTS.md +
+    skill specs as the user_input content. Returns a parsed incident dict.
+
+    Note: as of 2026-05, attaching the Veo MP4 directly via the input array
+    returns "Cannot specify tool calls outside of Turn items" from the API.
+    The scenario narrative substitutes for the video for now — when Google
+    documents the multimodal attachment shape we'll wire the clip in.
+    """
+    prompt = _gemini_prompt(camera, scenario, has_video=False)
+    body = {
+        "agent": ANTIGRAVITY_AGENT,
+        "environment": {"type": "remote"},
+        "tools": [],
+        "input": [{"type": "user_input", "content": prompt}],
+    }
+    url = ANTIGRAVITY_ENDPOINT.format(key=api_key)
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        payload = json.loads(r.read())
+
+    # Concatenate all text outputs (Antigravity may return multiple thought/text items).
+    text_parts = [o.get("text", "") for o in payload.get("outputs", []) if o.get("type") == "text"]
+    text = _strip_fences("\n".join(text_parts).strip())
     return json.loads(text)
 
 

@@ -6,7 +6,7 @@
   "outputDirectory": "public",
   "functions": {
     "api/tick.py": {
-      "maxDuration": 30,
+      "maxDuration": 60,
       "memory": 512,
       "includeFiles": "{data,scenarios,agents}/**"
     },

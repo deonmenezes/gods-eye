@@ -1,4 +1,4 @@
-// ZECURITY — Command Center
+// GODS EYE — Command Center
 // Cobe blue-dot globe + flag callouts + live SSE wiring.
 import createGlobe from "https://esm.sh/cobe@0.6.3";
 

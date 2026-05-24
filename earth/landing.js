@@ -1,4 +1,4 @@
-// ZECURITY landing — dark globe hero
+// GODS EYE landing — dark globe hero
 import createGlobe from "https://esm.sh/cobe@0.6.3";
 
 const CAMERAS = [

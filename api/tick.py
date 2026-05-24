@@ -34,6 +34,7 @@ class handler(BaseHTTPRequestHandler):
 
             api_key = os.environ.get("GOOGLE_AI_API_KEY", "").strip()
             model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+            use_antigravity = os.environ.get("SENTINEL_AGENT", "").lower() == "antigravity"
 
             t0 = time.time()
             mode = "stub"
@@ -43,24 +44,19 @@ class handler(BaseHTTPRequestHandler):
             host = self.headers.get("host") or self.headers.get("Host")
 
             if api_key:
-                # Fetch the pre-baked Veo MP4 so Gemini can analyze the actual frames.
-                video_bytes = _lib.fetch_clip_bytes(scenario["id"], host)
-                video_used = bool(video_bytes)
-                # Cap the inline payload to keep us under the 30s function budget.
-                # Gemini accepts up to 20 MB inline; our clips are well under.
-                try:
-                    incident = _lib.call_gemini(
-                        camera, scenario, api_key, model,
-                        video_bytes=video_bytes,
-                        timeout=24.0,
-                    )
-                    incident = _lib.enrich_incident(incident, camera, scenario)
-                    mode = "gemini_video" if video_used else "gemini"
-                except Exception as e:
-                    log.exception("gemini call failed")
-                    error = f"{type(e).__name__}: {e}"[:300]
-                    # Retry once without video (faster) if the video call timed out.
-                    if video_used:
+                if use_antigravity:
+                    # Real PRD architecture: Antigravity Agent in a Google-hosted
+                    # remote Linux sandbox. Text-only for now (multimodal shape
+                    # still being reverse-engineered).
+                    try:
+                        incident = _lib.call_antigravity(
+                            camera, scenario, api_key, timeout=24.0,
+                        )
+                        incident = _lib.enrich_incident(incident, camera, scenario)
+                        mode = "antigravity"
+                    except Exception as e:
+                        log.exception("antigravity call failed; falling back to gemini-flash")
+                        error = f"{type(e).__name__}: {e}"[:300]
                         try:
                             incident = _lib.call_gemini(
                                 camera, scenario, api_key, model,
@@ -68,21 +64,54 @@ class handler(BaseHTTPRequestHandler):
                             )
                             incident = _lib.enrich_incident(incident, camera, scenario)
                             mode = "gemini"
-                            video_used = False
                             error = None
                         except Exception as e2:
                             error = f"{type(e2).__name__}: {e2}"[:300]
                             incident = _lib.stub_incident(camera, scenario)
-                    else:
-                        incident = _lib.stub_incident(camera, scenario)
+                else:
+                    # Fetch the pre-baked Veo MP4 so Gemini can analyze the actual frames.
+                    video_bytes = _lib.fetch_clip_bytes(scenario["id"], host)
+                    video_used = bool(video_bytes)
+                    # Cap the inline payload to keep us under the 30s function budget.
+                    # Gemini accepts up to 20 MB inline; our clips are well under.
+                    try:
+                        incident = _lib.call_gemini(
+                            camera, scenario, api_key, model,
+                            video_bytes=video_bytes,
+                            timeout=24.0,
+                        )
+                        incident = _lib.enrich_incident(incident, camera, scenario)
+                        mode = "gemini_video" if video_used else "gemini"
+                    except Exception as e:
+                        log.exception("gemini call failed")
+                        error = f"{type(e).__name__}: {e}"[:300]
+                        # Retry once without video (faster) if the video call timed out.
+                        if video_used:
+                            try:
+                                incident = _lib.call_gemini(
+                                    camera, scenario, api_key, model,
+                                    video_bytes=None, timeout=18.0,
+                                )
+                                incident = _lib.enrich_incident(incident, camera, scenario)
+                                mode = "gemini"
+                                video_used = False
+                                error = None
+                            except Exception as e2:
+                                error = f"{type(e2).__name__}: {e2}"[:300]
+                                incident = _lib.stub_incident(camera, scenario)
+                        else:
+                            incident = _lib.stub_incident(camera, scenario)
             else:
                 incident = _lib.stub_incident(camera, scenario)
 
             incident["_meta"] = {
                 "mode": mode,
                 "latency_ms": int((time.time() - t0) * 1000),
-                "model": model if mode.startswith("gemini") else None,
-                "video": video_used,
+                "model": (
+                    "antigravity-preview-05-2026" if mode == "antigravity"
+                    else (model if mode.startswith("gemini") else None)
+                ),
+                "video": locals().get("video_used", False),
                 "error": error,
             }
             _lib.json_response(self, incident)

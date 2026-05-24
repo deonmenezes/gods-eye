@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZECURITY — Global Threat Intelligence</title>
+  <title>GODS EYE — Global Threat Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
 <body>
   <!-- ===== Icon rail (far left) ===== -->
   <aside class="rail">
-    <a class="rail-brand" href="/" title="Zecurity">
+    <a class="rail-brand" href="/" title="Gods Eye">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6">
         <circle cx="12" cy="12" r="9"/>
         <circle cx="12" cy="12" r="4"/>
@@ -78,7 +78,7 @@
           <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
         </svg>
       </span>
-      <span class="brand-word">ZECURITY</span>
+      <span class="brand-word">GODS EYE</span>
     </header>
 
     <!-- Threat level card -->
@@ -152,8 +152,12 @@
     <!-- Globe stage -->
     <section class="stage">
       <div class="globe-stage">
-        <canvas id="cobe-globe" width="1400" height="1400"></canvas>
+        <!-- Google Photorealistic 3D Tiles mount; JS injects <gmp-map-3d> here -->
+        <div id="map-root"></div>
+        <!-- Cobe fallback canvas (hidden when Google Maps boots successfully) -->
+        <canvas id="cobe-globe" width="1400" height="1400" hidden></canvas>
         <div id="globe-callouts" class="callouts"></div>
+        <div id="map-status" class="map-status" hidden></div>
       </div>
 
       <!-- legend bottom-left -->

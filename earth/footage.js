@@ -1,4 +1,4 @@
-// ZECURITY — All Cameras
+// GODS EYE — All Cameras
 // 125 synthetic cameras paginated 15/page over real local Veo clips.
 
 const CLIPS = [

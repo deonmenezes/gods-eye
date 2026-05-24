@@ -76,8 +76,28 @@ app = FastAPI(title="Sentinel Status Broker", version="0.1.0")
 
 
 @app.get("/")
-async def index() -> FileResponse:
+async def landing() -> FileResponse:
     return FileResponse(EARTH_DIR / "index.html")
+
+
+@app.get("/connect")
+async def connect() -> FileResponse:
+    return FileResponse(EARTH_DIR / "connect.html")
+
+
+@app.get("/dashboard")
+async def dashboard() -> FileResponse:
+    return FileResponse(EARTH_DIR / "dashboard.html")
+
+
+@app.get("/landing.css")
+async def landing_css() -> FileResponse:
+    return FileResponse(EARTH_DIR / "landing.css", media_type="text/css")
+
+
+@app.get("/landing.js")
+async def landing_js() -> FileResponse:
+    return FileResponse(EARTH_DIR / "landing.js", media_type="application/javascript")
 
 
 @app.get("/config.js")

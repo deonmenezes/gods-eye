@@ -32,14 +32,29 @@ CITIES_PATH = ROOT / "data" / "cities.json"
 CITIES = json.loads(CITIES_PATH.read_text()) if CITIES_PATH.exists() else []
 
 AGENTS_MD = (ROOT / "agents" / "threat_analyst" / "AGENTS.md").read_text()
+_SKILL_NAMES = (
+    "weapon_detection",
+    "loitering",
+    "forced_entry",
+    "assault",
+    "theft_in_progress",
+    "incident_report",
+)
 SKILL_MD = {
     name: (ROOT / "agents" / "threat_analyst" / "skills" / name / "SKILL.md").read_text()
-    for name in ("weapon_detection", "loitering", "forced_entry", "incident_report")
+    for name in _SKILL_NAMES
+    if (ROOT / "agents" / "threat_analyst" / "skills" / name / "SKILL.md").exists()
 }
 
 SEVERITY_LADDER = ("info", "low", "medium", "high", "critical")
 SEVERITY_INDEX = {s: i for i, s in enumerate(SEVERITY_LADDER)}
-SKILL_LOCAL_SEVERITY = {"weapon_detection": "high", "forced_entry": "high", "loitering": "low"}
+SKILL_LOCAL_SEVERITY = {
+    "weapon_detection": "high",
+    "forced_entry": "high",
+    "assault": "high",
+    "theft_in_progress": "high",
+    "loitering": "low",
+}
 
 
 def cameras() -> list[dict]:
@@ -148,21 +163,18 @@ def _gemini_prompt(camera: dict, scenario: dict, has_video: bool = False) -> str
         "You do NOT see real video; treat the narrative below as ground truth "
         "of what the synthetic Veo clip depicts, and reason as if you were watching it."
     )
+    skill_specs = "\n\n---\n\n".join(
+        SKILL_MD[name] for name in (
+            "weapon_detection", "loitering", "forced_entry", "assault", "theft_in_progress"
+        ) if name in SKILL_MD
+    )
     return f"""{AGENTS_MD}
 
 ---
 
 Skills available (you must evaluate each):
 
-{SKILL_MD['weapon_detection']}
-
----
-
-{SKILL_MD['loitering']}
-
----
-
-{SKILL_MD['forced_entry']}
+{skill_specs}
 
 ---
 

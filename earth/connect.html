@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZECURITY — connecting cameras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing.css" />
+</head>
+<body class="connect">
+  <div class="connect-shell">
+    <!-- Top -->
+    <div class="connect-top">
+      <a class="logo" href="/">
+        <span class="logo-mark">▣</span>
+        <span class="logo-word">ZECURITY</span>
+      </a>
+      <div class="connect-step">STEP 02 / 03 · CONNECT CAMERAS</div>
+    </div>
+
+    <!-- Heading -->
+    <div class="connect-head">
+      <h1>HANDSHAKE<br/>WITH 8 CAMERAS.</h1>
+      <p>
+        Provisioning one Gemini agent per feed. Each agent boots in its own
+        ephemeral Linux sandbox, loads its skills, and starts watching.
+      </p>
+    </div>
+
+    <!-- Progress -->
+    <div class="connect-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-pct" id="progress-pct">0%</div>
+    </div>
+
+    <!-- 8 camera grid -->
+    <div class="connect-grid" id="cam-grid">
+      <div class="cam-card" data-state="pending" data-cam="01">
+        <div class="cam-card-row"><span class="cam-card-num">01</span><span class="cam-card-dot"></span></div>
+        <div class="cam-card-loc">UNION SQ</div>
+        <div class="cam-card-city">SAN FRANCISCO</div>
+        <div class="cam-card-status">awaiting handshake</div>
+      </div>
+      <div class="cam-card" data-state="pending" data-cam="02">
+        <div class="cam-card-row"><span class="cam-card-num">02</span><span class="cam-card-dot"></span></div>
+        <div class="cam-card-loc">TIMES SQ</div>
+        <div class="cam-card-city">NEW YORK</div>
+        <div class="cam-card-status">awaiting handshake</div>
+      </div>
+      <div class="cam-card" data-state="pending" data-cam="03">
+        <div class="cam-card-row"><span class="cam-card-num">03</span><span class="cam-card-dot"></span></div>
+        <div class="cam-card-loc">KING'S X</div>
+        <div class="cam-card-city">LONDON</div>
+        <div class="cam-card-status">awaiting handshake</div>
+      </div>
+      <div class="cam-card" data-state="pending" data-cam="04">
+        <div class="cam-card-row"><span class="cam-card-num">04</span><span class="cam-card-dot"></span></div>
+        <div class="cam-card-loc">LAFAYETTE</div>
+        <div class="cam-card-city">PARIS</div>
+        <div class="cam-card-status">awaiting handshake</div>
+      </div>
+      <div class="cam-card" data-state="pending" data-cam="05">
+        <div class="cam-card-row"><span class="cam-card-num">05</span><span class="cam-card-dot"></span></div>
+        <div class="cam-card-loc">SHIBUYA</div>
+        <div class="cam-card-city">TOKYO</div>
+        <div class="cam-card-status">awaiting handshake</div>
+      </div>
+      <div class="cam-card" data-state="pending" data-cam="06">
+        <div class="cam-card-row"><span class="cam-card-num">06</span><span class="cam-card-dot"></span></div>
+        <div class="cam-card-loc">BURJ KHALIFA</div>
+        <div class="cam-card-city">DUBAI</div>
+        <div class="cam-card-status">awaiting handshake</div>
+      </div>
+      <div class="cam-card" data-state="pending" data-cam="07">
+        <div class="cam-card-row"><span class="cam-card-num">07</span><span class="cam-card-dot"></span></div>
+        <div class="cam-card-loc">PITT MALL</div>
+        <div class="cam-card-city">SYDNEY</div>
+        <div class="cam-card-status">awaiting handshake</div>
+      </div>
+      <div class="cam-card" data-state="pending" data-cam="08">
+        <div class="cam-card-row"><span class="cam-card-num">08</span><span class="cam-card-dot"></span></div>
+        <div class="cam-card-loc">AV PAULISTA</div>
+        <div class="cam-card-city">SÃO PAULO</div>
+        <div class="cam-card-status">awaiting handshake</div>
+      </div>
+    </div>
+
+    <!-- Terminal-ish log -->
+    <div class="connect-log" id="connect-log">
+      <span class="log-line"><span class="log-prompt">$</span>zecurity init --cameras 8 --provider gemini</span>
+    </div>
+
+    <!-- CTA row -->
+    <div class="connect-cta-row">
+      <a href="/" class="connect-back">← back</a>
+      <a id="enter-btn" class="btn btn-primary btn-xl connect-enter" href="/dashboard">
+        <span class="btn-label">ENTER COMMAND CENTER</span>
+        <span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const cards = Array.from(document.querySelectorAll(".cam-card"));
+    const fill = document.getElementById("progress-fill");
+    const pct = document.getElementById("progress-pct");
+    const log = document.getElementById("connect-log");
+    const enter = document.getElementById("enter-btn");
+
+    const LOG = [
+      { delay: 300,  text: "[boot] sandbox pool warming (8 microVMs)…" },
+      { delay: 500,  text: "[boot] sandbox pool ready" },
+      { delay: 250,  text: "[handshake] cam 01 union sq · gemini agent provisioned" },
+      { delay: 300,  text: "[skills] loaded: weapon_detection, loitering, forced_entry, incident_report" },
+      { delay: 300,  text: "[handshake] cam 02 times sq · gemini agent provisioned" },
+      { delay: 320,  text: "[handshake] cam 03 king's x · gemini agent provisioned" },
+      { delay: 320,  text: "[handshake] cam 04 lafayette · gemini agent provisioned" },
+      { delay: 280,  text: "[handshake] cam 05 shibuya · gemini agent provisioned" },
+      { delay: 320,  text: "[handshake] cam 06 burj khalifa · gemini agent provisioned" },
+      { delay: 280,  text: "[handshake] cam 07 pitt mall · gemini agent provisioned" },
+      { delay: 320,  text: "[handshake] cam 08 av paulista · gemini agent provisioned" },
+      { delay: 360,  text: "[stream] sse broker open · 8/8 feeds linked" },
+      { delay: 260,  text: "[ok] all agents online · entering command center" },
+    ];
+
+    let logIdx = 0;
+    function pushLog() {
+      if (logIdx >= LOG.length) return;
+      const item = LOG[logIdx++];
+      setTimeout(() => {
+        const el = document.createElement("span");
+        el.className = "log-line";
+        el.innerHTML = `<span class="log-prompt">›</span>${item.text}`;
+        log.appendChild(el);
+        log.scrollTop = log.scrollHeight;
+        pushLog();
+      }, item.delay);
+    }
+    pushLog();
+
+    // Connect cameras one-by-one
+    let i = 0;
+    function connectNext() {
+      if (i >= cards.length) {
+        finish();
+        return;
+      }
+      const card = cards[i];
+      card.setAttribute("data-state", "connecting");
+      card.querySelector(".cam-card-status").textContent = "negotiating tls · provisioning sandbox";
+
+      setTimeout(() => {
+        card.setAttribute("data-state", "online");
+        card.querySelector(".cam-card-status").textContent = "● online · agent watching";
+        i++;
+        const p = Math.round((i / cards.length) * 100);
+        fill.style.width = p + "%";
+        pct.textContent = p + "%";
+        setTimeout(connectNext, 220);
+      }, 520);
+    }
+    setTimeout(connectNext, 600);
+
+    function finish() {
+      fill.style.width = "100%";
+      pct.textContent = "100%";
+      enter.classList.add("ready");
+      // Auto-redirect after a beat so the user feels momentum, but they can click sooner.
+      setTimeout(() => {
+        if (!window._zecManualNav) {
+          window.location.href = "/dashboard";
+        }
+      }, 1800);
+    }
+
+    enter.addEventListener("click", () => { window._zecManualNav = true; });
+  })();
+  </script>
+</body>
+</html>

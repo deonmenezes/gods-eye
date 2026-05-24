@@ -3,194 +3,221 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SENTINEL — Global Command Center</title>
+  <title>ZECURITY — managed by AI agents</title>
+  <meta name="description" content="Global security surveillance managed end-to-end by AI agents. 8 cameras. 1 planet. Zero blind spots." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css" />
-  <script src="/config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing.css" />
 </head>
-<body>
-  <!-- Top status bar -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo-mark">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7">
-          <circle cx="12" cy="12" r="9"/>
-          <circle cx="12" cy="12" r="4"/>
-          <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
-        </svg>
-      </div>
-      <div class="brand-text">
-        <div class="name">SENTINEL</div>
-        <div class="subname">global command center · v0</div>
-      </div>
-    </div>
-
-    <div class="metrics">
-      <div class="metric red">
-        <div class="metric-dot"></div>
-        <div class="metric-body">
-          <div class="metric-num" id="count-red">0</div>
-          <div class="metric-lbl">active</div>
-        </div>
-      </div>
-      <div class="metric yellow">
-        <div class="metric-dot"></div>
-        <div class="metric-body">
-          <div class="metric-num" id="count-yellow">0</div>
-          <div class="metric-lbl">suspicious</div>
-        </div>
-      </div>
-      <div class="metric green">
-        <div class="metric-dot"></div>
-        <div class="metric-body">
-          <div class="metric-num" id="count-green">0</div>
-          <div class="metric-lbl">nominal</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="status-cluster">
-      <div class="utc"><span id="utc-clock">--:--:-- UTC</span></div>
-      <button id="mute-toggle" class="mute-btn" title="Toggle dispatch calls">
-        <span id="mute-icon">🔔</span> <span id="mute-label">calls on</span>
-      </button>
-      <div class="status-pill">
-        <span id="conn-status" class="conn-dot offline"></span>
-        <span id="conn-text">connecting…</span>
-      </div>
-    </div>
+<body class="landing">
+  <!-- Top nav -->
+  <header class="nav">
+    <a class="logo" href="/">
+      <span class="logo-mark">▣</span>
+      <span class="logo-word">ZECURITY</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#how">how it works</a>
+      <a href="#agents">agents</a>
+      <a href="#cameras">cameras</a>
+      <a href="/dashboard" class="nav-cta">live demo →</a>
+    </nav>
   </header>
 
-  <!-- Flashing alert banner (fires on new critical incidents) -->
-  <div id="alert-banner" class="alert-banner">
-    <div class="alert-stripe"></div>
-    <div class="alert-body">
-      <span class="alert-tag">🚨 CRITICAL</span>
-      <span id="alert-text">—</span>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-marker">
+      <span class="rec-dot"></span>
+      <span class="hero-marker-text">live · 8 cameras streaming · 4 continents</span>
     </div>
-    <div class="alert-stripe"></div>
+
+    <h1 class="hero-title">
+      <span class="line">SECURITY,</span>
+      <span class="line">FULLY <em class="hilite">MANAGED</em></span>
+      <span class="line">BY <em class="hilite hilite-pink">AI&nbsp;AGENTS.</em></span>
+    </h1>
+
+    <p class="hero-sub">
+      One Gemini agent per camera. Each one watches, reasons, and acts —
+      in its own ephemeral sandbox, 24/7, without blinking. You just review the dispatches.
+    </p>
+
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="/connect">
+        <span class="btn-label">GET STARTED</span>
+        <span class="btn-arrow">→</span>
+        <span class="btn-sub">connect cameras</span>
+      </a>
+      <a class="btn btn-ghost" href="/dashboard">
+        <span class="btn-label">WATCH DEMO</span>
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">8</div>
+        <div class="stat-lbl">cameras live</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">4</div>
+        <div class="stat-lbl">continents</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">0</div>
+        <div class="stat-lbl">human watchers</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">∞</div>
+        <div class="stat-lbl">attention span</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee">
+    <div class="marquee-track">
+      <span>★ UNION SQUARE</span><span>★ TIMES SQUARE</span><span>★ KING'S CROSS</span>
+      <span>★ GALERIES LAFAYETTE</span><span>★ SHIBUYA</span><span>★ BURJ KHALIFA</span>
+      <span>★ PITT ST MALL</span><span>★ AV PAULISTA</span>
+      <span>★ UNION SQUARE</span><span>★ TIMES SQUARE</span><span>★ KING'S CROSS</span>
+      <span>★ GALERIES LAFAYETTE</span><span>★ SHIBUYA</span><span>★ BURJ KHALIFA</span>
+      <span>★ PITT ST MALL</span><span>★ AV PAULISTA</span>
+    </div>
   </div>
 
-  <main>
-    <!-- Left: live incident feed -->
-    <aside class="feed">
-      <div class="feed-header">
-        <div class="feed-title">incident feed</div>
-        <div class="feed-meta" id="feed-meta">awaiting events</div>
-      </div>
-      <div class="feed-tabs">
-        <button class="feed-tab active" data-filter="all">All</button>
-        <button class="feed-tab" data-filter="red">Active</button>
-        <button class="feed-tab" data-filter="yellow">Suspicious</button>
-      </div>
-      <div id="feed-list" class="feed-list"></div>
-      <div class="feed-footer">
-        <div>roster</div>
-        <div id="feed-roster"></div>
-      </div>
-    </aside>
+  <!-- How it works -->
+  <section id="how" class="section section-how">
+    <div class="section-tag">how it works</div>
+    <h2 class="section-title">Three steps. No humans in the loop.</h2>
 
-    <!-- Middle: 3D map -->
-    <section class="map-section">
-      <div id="map-root"></div>
+    <div class="steps">
+      <article class="step step-yellow">
+        <div class="step-num">01</div>
+        <div class="step-title">CAMERA STREAMS</div>
+        <p class="step-body">
+          Plug your CCTV feeds in. Or use our 8-city synthetic demo
+          generated frame-by-frame by Veo 3.1.
+        </p>
+        <div class="step-tag">▣ INPUT</div>
+      </article>
 
-      <!-- Map overlays -->
-      <div class="map-overlay top-left">
-        <div class="locator">
-          <div class="locator-coords" id="locator-coords">GLOBAL · 0°N 0°W</div>
-          <div class="locator-sub" id="locator-sub">loading…</div>
+      <article class="step step-pink">
+        <div class="step-num">02</div>
+        <div class="step-title">AI AGENT WATCHES</div>
+        <p class="step-body">
+          One Gemini agent per camera, running in its own Linux sandbox.
+          Applies skills like weapon-detect, loitering, forced-entry.
+        </p>
+        <div class="step-tag">⚙ AGENT</div>
+      </article>
+
+      <article class="step step-cyan">
+        <div class="step-num">03</div>
+        <div class="step-title">YOU GET DISPATCH</div>
+        <p class="step-body">
+          Red / Yellow / Green pin on a 3D globe. Open it for the clip,
+          the reasoning trace, and a one-tap dispatch button.
+        </p>
+        <div class="step-tag">⚡ OUTPUT</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Agents -->
+  <section id="agents" class="section section-agents">
+    <div class="section-tag">the agent stack</div>
+    <h2 class="section-title">Every camera gets its own brain.</h2>
+
+    <div class="agents-grid">
+      <div class="agent-card">
+        <div class="agent-row">
+          <span class="agent-id">AGENT.001</span>
+          <span class="agent-status">● ONLINE</span>
         </div>
-      </div>
-
-      <div class="map-overlay bottom-left">
-        <div class="legend">
-          <div class="legend-row"><span class="legend-dot red"></span>active threat</div>
-          <div class="legend-row"><span class="legend-dot yellow"></span>suspicious</div>
-          <div class="legend-row"><span class="legend-dot green"></span>nominal</div>
+        <div class="agent-name">threat_analyst</div>
+        <div class="agent-skills">
+          <span>weapon_detection</span>
+          <span>loitering</span>
+          <span>forced_entry</span>
+          <span>incident_report</span>
         </div>
+        <div class="agent-foot">Gemini 2.x · ephemeral sandbox · per-camera</div>
       </div>
-
-      <div class="map-overlay bottom-right">
-        <div class="ops-controls">
-          <button id="orbit-toggle" class="op-btn" title="Toggle camera orbit">◐ orbit</button>
-          <button id="recenter-btn" class="op-btn" title="Recenter on SF">⌂ home</button>
+      <div class="agent-card agent-card-alt">
+        <div class="agent-row">
+          <span class="agent-id">AGENT.002</span>
+          <span class="agent-status">● ONLINE</span>
         </div>
-      </div>
-
-      <!-- Scanline overlay (decorative) -->
-      <div class="scanlines"></div>
-    </section>
-
-    <!-- Right: incident detail with CCTV viewport -->
-    <aside class="detail" id="detail-panel">
-      <div class="detail-header">
-        <div>
-          <div class="detail-label" id="d-label">Awaiting first incident…</div>
-          <div class="detail-sub"><span id="d-cam">—</span> · <span id="d-zone">—</span></div>
+        <div class="agent-name">scene_describer</div>
+        <div class="agent-skills">
+          <span>crowd_count</span>
+          <span>flow_anomaly</span>
+          <span>jaywalk</span>
         </div>
-        <div class="detail-sev">
-          <span id="d-sev" class="sev-pill info">info</span>
+        <div class="agent-foot">Gemini 2.x · ephemeral sandbox · per-camera</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-row">
+          <span class="agent-id">AGENT.003</span>
+          <span class="agent-status">● ONLINE</span>
         </div>
-      </div>
-
-      <!-- Synthetic CCTV viewport — real Veo MP4 if available, canvas fallback -->
-      <div class="cctv">
-        <video id="cctv-video" autoplay muted loop playsinline preload="auto"></video>
-        <canvas id="cctv-canvas" width="640" height="360"></canvas>
-        <div class="cctv-chrome">
-          <div class="cctv-top">
-            <div class="rec-badge"><span class="rec-dot"></span>REC</div>
-            <div class="cctv-cam-id" id="cctv-cam-id">—</div>
-            <div class="cctv-time" id="cctv-time">--:--:--</div>
-          </div>
-          <div class="cctv-bottom">
-            <div class="cctv-tag" id="cctv-tag">VEO 3.1 · synthetic</div>
-            <div class="cctv-scenario" id="cctv-scenario">—</div>
-          </div>
+        <div class="agent-name">severity_grader</div>
+        <div class="agent-skills">
+          <span>red / yellow / green</span>
+          <span>action_recommend</span>
         </div>
-        <div class="cctv-vignette"></div>
+        <div class="agent-foot">Gemini 2.x · ephemeral sandbox · per-camera</div>
       </div>
+    </div>
+  </section>
 
-      <div class="detail-action-bar">
-        <div class="detail-action-info">
-          <div class="detail-action-key">recommended</div>
-          <div class="detail-action-val" id="d-action">—</div>
-        </div>
-        <div class="detail-actions">
-          <button class="action-btn dispatch" data-action="dispatch">DISPATCH</button>
-          <button class="action-btn escalate" data-action="escalate">Escalate</button>
-          <button class="action-btn ghost" data-action="false_positive">False positive</button>
-        </div>
+  <!-- Cameras strip -->
+  <section id="cameras" class="section section-cameras">
+    <div class="section-tag">8 live cameras</div>
+    <h2 class="section-title">From SF to São Paulo. Always on.</h2>
+
+    <div class="cam-grid">
+      <div class="cam-tile"><div class="cam-tile-num">01</div><div class="cam-tile-loc">UNION SQ</div><div class="cam-tile-city">SAN FRANCISCO</div></div>
+      <div class="cam-tile"><div class="cam-tile-num">02</div><div class="cam-tile-loc">TIMES SQ</div><div class="cam-tile-city">NEW YORK</div></div>
+      <div class="cam-tile"><div class="cam-tile-num">03</div><div class="cam-tile-loc">KING'S X</div><div class="cam-tile-city">LONDON</div></div>
+      <div class="cam-tile"><div class="cam-tile-num">04</div><div class="cam-tile-loc">LAFAYETTE</div><div class="cam-tile-city">PARIS</div></div>
+      <div class="cam-tile"><div class="cam-tile-num">05</div><div class="cam-tile-loc">SHIBUYA</div><div class="cam-tile-city">TOKYO</div></div>
+      <div class="cam-tile"><div class="cam-tile-num">06</div><div class="cam-tile-loc">BURJ KHALIFA</div><div class="cam-tile-city">DUBAI</div></div>
+      <div class="cam-tile"><div class="cam-tile-num">07</div><div class="cam-tile-loc">PITT MALL</div><div class="cam-tile-city">SYDNEY</div></div>
+      <div class="cam-tile"><div class="cam-tile-num">08</div><div class="cam-tile-loc">AV PAULISTA</div><div class="cam-tile-city">SÃO PAULO</div></div>
+    </div>
+  </section>
+
+  <!-- CTA strip -->
+  <section class="section section-cta">
+    <div class="cta-card">
+      <div class="cta-text">
+        <h2>READY TO HAND IT OVER?</h2>
+        <p>Connect your 8 cameras. Step back. Let the agents run the room.</p>
       </div>
+      <a class="btn btn-primary btn-xl" href="/connect">
+        <span class="btn-label">GET STARTED</span>
+        <span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </section>
 
-      <div class="detail-section">
-        <div class="section-title">scene</div>
-        <p id="d-summary" class="scene">Waiting for first analysis…</p>
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-row">
+      <div class="footer-brand">▣ ZECURITY</div>
+      <div class="footer-tag">managed by AI agents · est. 2026</div>
+      <div class="footer-links">
+        <a href="/dashboard">command center</a>
+        <a href="https://github.com" target="_blank" rel="noopener">github</a>
       </div>
+    </div>
+    <div class="footer-fineprint">
+      v0 · synthetic footage by Veo 3.1 · agents on Gemini Managed Agents
+    </div>
+  </footer>
 
-      <div class="detail-section">
-        <div class="section-title">findings</div>
-        <ul id="d-findings" class="findings"></ul>
-      </div>
-
-      <div class="detail-section">
-        <div class="section-title">agent trace</div>
-        <div class="trace-meta" id="d-sev-reason">—</div>
-        <ol id="d-trace" class="trace"></ol>
-      </div>
-
-      <div class="detail-section">
-        <div class="section-title">deep link</div>
-        <div class="deeplink">
-          <input id="d-deeplink" readonly />
-          <button id="copy-link">copy</button>
-        </div>
-      </div>
-    </aside>
-  </main>
-
-  <script type="module" src="/app.js"></script>
+  <script src="/landing.js" defer></script>
 </body>
 </html>

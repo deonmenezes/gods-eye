@@ -26,7 +26,7 @@ from .severity import (
 log = logging.getLogger(__name__)
 
 AGENT_FOLDER = Path(__file__).resolve().parents[1] / "agents" / "threat_analyst"
-ALL_SKILLS = ("weapon_detection", "loitering", "forced_entry")
+ALL_SKILLS = ("weapon_detection", "loitering", "forced_entry", "assault", "theft_in_progress")
 
 
 def _trace(events: list[dict], event: str, t0: float, **detail) -> None:

@@ -78,5 +78,66 @@
     "altitude": 14,
     "zone_type": "parking",
     "pinned_scenario": "scn-normal-parking"
+  },
+
+  {
+    "camera_id": "la-fight-01",
+    "city_id": "la",
+    "label": "Hollywood Boulevard Plaza",
+    "lat": 34.10180,
+    "lon": -118.33950,
+    "altitude": 18,
+    "zone_type": "transit_hub",
+    "pinned_scenario": "scn-fight"
+  },
+  {
+    "camera_id": "ber-snatch-01",
+    "city_id": "ber",
+    "label": "Alexanderplatz Sidewalk",
+    "lat": 52.52160,
+    "lon": 13.41370,
+    "altitude": 18,
+    "zone_type": "transit_hub",
+    "pinned_scenario": "scn-bag-snatch"
+  },
+  {
+    "camera_id": "hkg-smash-01",
+    "city_id": "hkg",
+    "label": "Central Pier 7 Parking",
+    "lat": 22.28200,
+    "lon": 114.15890,
+    "altitude": 14,
+    "zone_type": "parking",
+    "pinned_scenario": "scn-smash-grab"
+  },
+  {
+    "camera_id": "sin-trespass-01",
+    "city_id": "sin",
+    "label": "Marina Bay Perimeter Fence",
+    "lat": 1.28330,
+    "lon": 103.86070,
+    "altitude": 16,
+    "zone_type": "alley",
+    "pinned_scenario": "scn-trespass-fence"
+  },
+  {
+    "camera_id": "mex-veh-01",
+    "city_id": "mex",
+    "label": "Polanco Underground Garage",
+    "lat": 19.43360,
+    "lon": -99.19620,
+    "altitude": 12,
+    "zone_type": "parking",
+    "pinned_scenario": "scn-vehicle-theft"
+  },
+  {
+    "camera_id": "mum-medical-01",
+    "city_id": "mum",
+    "label": "Chhatrapati Shivaji Terminus Hall 2",
+    "lat": 18.94000,
+    "lon": 72.83560,
+    "altitude": 22,
+    "zone_type": "transit_hub",
+    "pinned_scenario": "scn-medical-collapse"
   }
 ]

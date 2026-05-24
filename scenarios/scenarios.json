@@ -31,7 +31,7 @@
     "zone_type": "transit_hub",
     "time_of_day": "day",
     "expected_activity": "pedestrian crossings",
-    "narrative": "A pedestrian crosses a street outside of the marked crosswalk while vehicles are moving. Mild traffic violation, no other criminal activity.",
+    "narrative": "A pedestrian crosses a street outside of the marked crosswalk while vehicles are moving. Mild traffic violation.",
     "expected_severity": "low",
     "skills_expected_to_fire": []
   },
@@ -40,7 +40,7 @@
     "zone_type": "atm",
     "time_of_day": "night",
     "expected_activity": "occasional ATM use",
-    "narrative": "A subject lingers near an ATM or storefront after hours, hands in pockets, glancing around. No transaction. Extended dwell time inconsistent with the zone's normal activity.",
+    "narrative": "A subject lingers near an ATM after hours, hands in pockets, glancing around. No transaction. Extended dwell time inconsistent with the zone's normal activity.",
     "expected_severity": "medium",
     "skills_expected_to_fire": ["loitering"]
   },
@@ -67,8 +67,63 @@
     "zone_type": "retail",
     "time_of_day": "day",
     "expected_activity": "register transactions",
-    "narrative": "A subject inside a retail store conceals merchandise — sliding items under clothing or into a bag — and moves toward an exit without paying.",
+    "narrative": "A subject inside a retail store conceals merchandise and moves toward an exit without paying.",
     "expected_severity": "high",
-    "skills_expected_to_fire": ["loitering"]
+    "skills_expected_to_fire": ["theft_in_progress"]
+  },
+
+  {
+    "id": "scn-fight",
+    "zone_type": "transit_hub",
+    "time_of_day": "night",
+    "expected_activity": "evening foot traffic",
+    "narrative": "Two subjects engage in a brief physical altercation — pushing, grabbing, possibly throwing punches. Onlookers stand back.",
+    "expected_severity": "high",
+    "skills_expected_to_fire": ["assault"]
+  },
+  {
+    "id": "scn-bag-snatch",
+    "zone_type": "transit_hub",
+    "time_of_day": "day",
+    "expected_activity": "sidewalk pedestrians",
+    "narrative": "A subject walks past a pedestrian, swiftly grabs a bag from their shoulder, and runs off-frame. The victim turns in surprise.",
+    "expected_severity": "high",
+    "skills_expected_to_fire": ["theft_in_progress"]
+  },
+  {
+    "id": "scn-smash-grab",
+    "zone_type": "parking",
+    "time_of_day": "night",
+    "expected_activity": "parked vehicles",
+    "narrative": "A subject smashes a vehicle window with a heavy object, reaches inside to remove items, then flees.",
+    "expected_severity": "critical",
+    "skills_expected_to_fire": ["forced_entry", "theft_in_progress"]
+  },
+  {
+    "id": "scn-vehicle-theft",
+    "zone_type": "parking",
+    "time_of_day": "night",
+    "expected_activity": "parked vehicles",
+    "narrative": "A subject works at the door of a parked vehicle, gets in, and prepares to drive away with the vehicle that is not theirs.",
+    "expected_severity": "high",
+    "skills_expected_to_fire": ["forced_entry"]
+  },
+  {
+    "id": "scn-trespass-fence",
+    "zone_type": "alley",
+    "time_of_day": "night",
+    "expected_activity": "restricted area",
+    "narrative": "A subject climbs over a perimeter fence into a restricted area and walks deeper into the property.",
+    "expected_severity": "medium",
+    "skills_expected_to_fire": ["forced_entry"]
+  },
+  {
+    "id": "scn-medical-collapse",
+    "zone_type": "transit_hub",
+    "time_of_day": "day",
+    "expected_activity": "pedestrian throughfare",
+    "narrative": "A pedestrian in a transit hub suddenly clutches their chest, stumbles, and collapses to the floor. Bystanders gather to help.",
+    "expected_severity": "high",
+    "skills_expected_to_fire": []
   }
 ]

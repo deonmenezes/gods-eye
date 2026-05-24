@@ -14,6 +14,8 @@ _INDEX = {name: i for i, name in enumerate(LADDER)}
 SKILL_LOCAL_SEVERITY = {
     "weapon_detection": "high",
     "forced_entry": "high",
+    "assault": "high",
+    "theft_in_progress": "high",
     "loitering": "low",
 }
 

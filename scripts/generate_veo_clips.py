@@ -50,6 +50,42 @@ VEO_MODEL = os.environ.get("VEO_MODEL", "veo-3.1-fast-generate-preview")
 # the visual *vibe* of the scene. Avoid weapon/violence vocabulary; lean
 # on surveillance-aesthetic cues (lighting, framing, motion).
 SAFE_PROMPTS: dict[str, str] = {
+    "scn-fight": (
+        "CCTV-style surveillance footage, fixed ceiling camera over a public urban plaza at night. "
+        "16:9, grainy. Two anonymous figures engage in a brief physical altercation — pushing and "
+        "grabbing each other's clothing. Onlookers stand at a distance. No clear faces. "
+        "Ambient streetlight. Timestamp burn-in upper-right."
+    ),
+    "scn-bag-snatch": (
+        "CCTV-style surveillance footage, fixed ceiling camera over a busy sidewalk during the day. "
+        "16:9, grainy. A figure walks closely past another pedestrian, swiftly grabs a bag from their "
+        "shoulder, and runs off-frame. The victim turns in surprise. Anonymous figures, no faces visible. "
+        "Daytime lighting. Timestamp burn-in upper-right."
+    ),
+    "scn-smash-grab": (
+        "CCTV-style surveillance footage, fixed ceiling camera above a parked vehicle in a parking lot at night. "
+        "16:9, grainy. An anonymous figure approaches the vehicle, strikes the side window with a heavy object, "
+        "reaches inside and removes items, then runs off-frame. Ambient parking lot lighting. "
+        "No faces visible. Timestamp burn-in upper-right."
+    ),
+    "scn-vehicle-theft": (
+        "CCTV-style surveillance footage, fixed ceiling camera over a parking lot at night. "
+        "16:9, grainy. An anonymous figure works at the door of a parked vehicle for an extended time, "
+        "then opens it and enters the driver's seat. Hood briefly lifted earlier. No faces visible. "
+        "Ambient sodium lighting. Timestamp burn-in upper-right."
+    ),
+    "scn-trespass-fence": (
+        "CCTV-style surveillance footage, fixed high-angle camera looking at a chain-link perimeter fence at night. "
+        "16:9, grainy. An anonymous figure climbs over the fence and drops into the restricted area beyond, "
+        "looks around, then walks off-frame. No faces visible. Ambient floodlight. "
+        "Timestamp burn-in upper-right."
+    ),
+    "scn-medical-collapse": (
+        "CCTV-style surveillance footage, fixed ceiling camera over a transit-hub concourse during the day. "
+        "16:9, grainy. An anonymous figure walking through the concourse suddenly clutches their chest, "
+        "stumbles, and collapses to the floor. Other pedestrians stop and gather around to help. "
+        "No faces visible. Daytime lighting. Timestamp burn-in upper-right."
+    ),
     "scn-clear-day-plaza": (
         "CCTV-style surveillance footage, fixed ceiling-mounted camera, "
         "wide-angle 16:9, slight fisheye, grainy. Daytime city plaza. "
@@ -203,8 +239,17 @@ def main() -> int:
     log.info("baking %d scenarios", len(targets))
     results = {}
     for sid in targets:
-        ok = generate(sid)
+        # Retry on transient failures (Veo returns 429 if you submit too fast).
+        for attempt in range(3):
+            ok = generate(sid)
+            if ok:
+                break
+            wait = 30 * (attempt + 1)
+            log.warning("%s failed (attempt %d), waiting %ds before retry", sid, attempt + 1, wait)
+            time.sleep(wait)
         results[sid] = ok
+        # Spacing between submissions so we don't trip the per-minute quota.
+        time.sleep(10)
     log.info("summary: %s", json.dumps(results, indent=2))
     return 0 if all(results.values()) else 1
 

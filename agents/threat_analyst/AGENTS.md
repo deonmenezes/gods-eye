@@ -28,6 +28,13 @@ Start at the highest individual fired skill severity. Then apply, in order:
 
 Severity ladder (low → high): `info`, `low`, `medium`, `high`, `critical`.
 
+Skill severities, base (before rule application):
+- `weapon_detection` — high
+- `forced_entry` — high
+- `assault` — high
+- `theft_in_progress` — high
+- `loitering` — low (escalates to medium at night in atm/parking/alley/retail_after_hours)
+
 ## Rules
 
 - Never invent footage, identities, or timestamps not present in the clip.

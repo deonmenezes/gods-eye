@@ -34,7 +34,9 @@
     { "source": "/cities", "destination": "/api/cities" },
     { "source": "/tick", "destination": "/api/tick" },
     { "source": "/dispatch", "destination": "/api/dispatch" },
-    { "source": "/twiml", "destination": "/api/twiml" }
+    { "source": "/twiml", "destination": "/api/twiml" },
+    { "source": "/connect", "destination": "/connect.html" },
+    { "source": "/dashboard", "destination": "/dashboard.html" }
   ],
   "headers": [
     {

@@ -169,6 +169,7 @@ async def post_incident(req: Request) -> JSONResponse:
         "incident_id": incident["incident_id"],
         "scenario_id": incident.get("scenario_id"),
         "recommended_action": incident.get("recommended_action"),
+        "scene_summary": incident.get("scene_summary"),
         "updated_at": STATE[cid]["updated_at"],
     }
     _publish(event)
@@ -220,6 +221,74 @@ async def styles() -> FileResponse:
 @app.get("/app.js")
 async def appjs() -> FileResponse:
     return FileResponse(EARTH_DIR / "app.js", media_type="application/javascript")
+
+
+@app.post("/dispatch")
+async def dispatch(req: Request) -> JSONResponse:
+    """Local mirror of /api/dispatch. Places a real Twilio call if env is set."""
+    import base64
+    import urllib.parse
+    import urllib.request as _ureq
+
+    body = await req.json()
+    sid = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
+    token = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
+    from_num = os.environ.get("TWILIO_FROM", "").strip()
+    to_num = (body.get("to") or os.environ.get("TWILIO_TO", "")).strip()
+    if not all([sid, token, from_num, to_num]):
+        return JSONResponse({"ok": False, "error": "Twilio env not set"}, status_code=500)
+
+    label = body.get("camera_label") or body.get("camera_id") or "unknown camera"
+    severity = (body.get("severity") or "critical").upper()
+    scene = body.get("scene_summary") or "Critical incident detected by Sentinel AI."
+    action = body.get("recommended_action") or "immediate response"
+    city = body.get("city") or ""
+    message = (
+        f"This is an automated Sentinel security alert. Severity: {severity}. "
+        f"Camera: {label}{', in ' + city if city else ''}. "
+        f"Scene: {scene} Recommended action: {action}. Please respond immediately."
+    )
+    # Twilio must be able to reach the TwiML URL from the public internet.
+    # Use TWILIO_TWIML_BASE (e.g. the Vercel /api/twiml) when set; else fall
+    # back to the local host (works only if the broker is tunneled, e.g. ngrok).
+    twiml_base = os.environ.get("TWILIO_TWIML_BASE", "").strip()
+    if twiml_base:
+        twiml_url = f"{twiml_base.rstrip('/')}/api/twiml?msg={urllib.parse.quote(message)}"
+    else:
+        host = req.headers.get("host") or "127.0.0.1:8000"
+        twiml_url = f"http://{host}/twiml?msg={urllib.parse.quote(message)}"
+    twilio_url = f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Calls.json"
+    form = urllib.parse.urlencode({"To": to_num, "From": from_num, "Url": twiml_url}).encode()
+    auth = base64.b64encode(f"{sid}:{token}".encode()).decode()
+    twreq = _ureq.Request(twilio_url, data=form, method="POST")
+    twreq.add_header("Authorization", f"Basic {auth}")
+    twreq.add_header("Content-Type", "application/x-www-form-urlencoded")
+    try:
+        with _ureq.urlopen(twreq, timeout=15) as r:
+            resp = json.loads(r.read())
+        return JSONResponse({"ok": True, "call_sid": resp.get("sid"), "status": resp.get("status"),
+                             "to": resp.get("to"), "spoken_message_preview": message[:200]})
+    except Exception as e:
+        msg = e.read().decode()[:300] if hasattr(e, "read") else str(e)
+        return JSONResponse({"ok": False, "error": msg}, status_code=502)
+
+
+@app.get("/twiml")
+@app.post("/twiml")
+async def twiml(request: Request) -> Response:
+    """TwiML target for the local Twilio dispatch call. Tunnel via ngrok if you
+    want Twilio to actually fetch this — otherwise Twilio's response will say
+    'Url unreachable'. We still return well-formed TwiML for cases where the
+    broker is exposed publicly."""
+    msg = request.query_params.get("msg") or "Sentinel alert."
+    esc = (msg.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+              .replace("\"", "&quot;").replace("'", "&apos;"))
+    body = (
+        f"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        f"<Response>\n  <Pause length=\"1\"/>\n  <Say voice=\"Polly.Joanna-Neural\">{esc}</Say>\n"
+        f"  <Pause length=\"1\"/>\n  <Say voice=\"Polly.Joanna-Neural\">Repeating. {esc}</Say>\n</Response>"
+    )
+    return Response(content=body, media_type="text/xml; charset=utf-8")
 
 
 @app.get("/healthz")

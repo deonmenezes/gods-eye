@@ -50,10 +50,49 @@ def _pick_scenario(camera: dict) -> dict:
     return random.choice(pool)
 
 
+def _pick_scenario_for(camera: dict) -> dict:
+    pinned = camera.get("pinned_scenario")
+    if pinned:
+        match = next((s for s in SCENARIOS if s["id"] == pinned), None)
+        if match:
+            return match
+    return _pick_scenario(camera)
+
+
+def _antigravity_incident(scenario: dict, camera: dict) -> dict | None:
+    """Best-effort Antigravity tick; returns None on failure (caller falls back)."""
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT / "api"))
+    try:
+        import _lib as api_lib  # type: ignore
+    except Exception as e:
+        log.warning("api/_lib import failed: %s", e)
+        return None
+    api_key = os.environ.get("GOOGLE_AI_API_KEY", "").strip()
+    if not api_key:
+        return None
+    try:
+        inc = api_lib.call_antigravity(camera, scenario, api_key, timeout=120)
+        return api_lib.enrich_incident(inc, camera, scenario)
+    except Exception as e:
+        log.warning("antigravity failed for %s: %s", camera["camera_id"], e)
+        return None
+
+
 async def _process_camera(client: httpx.AsyncClient, camera: dict) -> None:
-    scenario = _pick_scenario(camera)
-    clip_meta = veo_client.get_clip(scenario, camera, mode=MODE)
-    incident = agent_runner.run(scenario, camera, clip_meta, mode=MODE)
+    scenario = _pick_scenario_for(camera)
+    use_antigravity = os.environ.get("SENTINEL_AGENT", "").lower() == "antigravity"
+    incident = None
+    inc_mode = MODE
+    if use_antigravity:
+        incident = _antigravity_incident(scenario, camera)
+        if incident is not None:
+            inc_mode = "antigravity"
+    if incident is None:
+        clip_meta = veo_client.get_clip(scenario, camera, mode=MODE)
+        incident = agent_runner.run(scenario, camera, clip_meta, mode=MODE)
+    incident.setdefault("_meta", {})
+    incident["_meta"].update({"mode": inc_mode})
     incident["scenario_id"] = scenario["id"]
     incident["pin_color"] = pin_color(incident["severity"])
     incident["camera"] = {

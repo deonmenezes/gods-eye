@@ -148,10 +148,86 @@ function placePins() {
     const pin = document.createElement("div");
     pin.className = `gmp-pin ${cam.pin_color || "green"}`;
     pin.title = cam.label || cam.camera_id;
+    pin.dataset.cameraId = cam.camera_id;
     m.appendChild(pin);
+    // Both the marker element and the inner pin can receive clicks.
+    m.addEventListener("gmp-click", () => flyToCamera(cam));
+    pin.addEventListener("click", (e) => { e.stopPropagation(); flyToCamera(cam); });
     STATE.map3d.appendChild(m);
     STATE.pins.set(cam.camera_id, m);
   }
+}
+
+// ---- City + camera fly-throughs ----
+
+const SF_LIKE_VIEW = (cam) => ({
+  center: { lat: cam.lat, lng: cam.lon, altitude: cam.altitude || 30 },
+  range: 600, tilt: 65, heading: 25,
+});
+
+function flyToCamera(cam) {
+  if (!STATE.map3d) return;
+  cancelAnimationFrame(STATE.orbitRaf);
+  try {
+    if (STATE.map3d.flyCameraTo) {
+      STATE.map3d.flyCameraTo({ endCamera: SF_LIKE_VIEW(cam), durationMillis: 2500 });
+    } else {
+      const v = SF_LIKE_VIEW(cam);
+      STATE.map3d.center = v.center;
+      STATE.map3d.range = v.range;
+      STATE.map3d.tilt = v.tilt;
+      STATE.map3d.heading = v.heading;
+    }
+  } catch {}
+  showBackButton(true);
+  // Open the right panel with this camera's latest incident.
+  applyIncident({
+    type: "status",
+    camera_id: cam.camera_id,
+    pin_color: cam.pin_color,
+    scenario_id: cam.last_scenario_id,
+    incident_id: cam.last_incident_id,
+    recommended_action: cam.label,
+    severity: cam.severity,
+  });
+}
+
+function flyToWorld() {
+  if (!STATE.map3d) return;
+  try {
+    if (STATE.map3d.flyCameraTo) {
+      STATE.map3d.flyCameraTo({ endCamera: WORLD_VIEW, durationMillis: 3000 });
+    } else {
+      STATE.map3d.center = WORLD_VIEW.center;
+      STATE.map3d.range = WORLD_VIEW.range;
+      STATE.map3d.tilt = WORLD_VIEW.tilt;
+      STATE.map3d.heading = WORLD_VIEW.heading;
+    }
+  } catch {}
+  showBackButton(false);
+  setTimeout(() => startOrbit(), 1500);
+}
+
+function showBackButton(visible) {
+  let b = document.getElementById("globe-back-btn");
+  if (!b) {
+    b = document.createElement("button");
+    b.id = "globe-back-btn";
+    b.textContent = "◀ back to world";
+    b.style.cssText = `
+      position: absolute; top: 14px; right: 14px; z-index: 12;
+      background: rgba(8,10,16,0.85); color: #eef2f8;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 8px;
+      padding: 8px 14px; font: 11px/1 "JetBrains Mono", monospace;
+      letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+      backdrop-filter: blur(8px); opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    `;
+    b.addEventListener("click", flyToWorld);
+    document.getElementById("map-root")?.parentElement?.appendChild(b);
+  }
+  b.style.opacity = visible ? "1" : "0";
+  b.style.pointerEvents = visible ? "auto" : "none";
 }
 
 function updatePinColor(cameraId, color) {
@@ -368,14 +444,22 @@ setInterval(() => {
 function applyIncident(ev) {
   if (ev.type !== "status") return;
   if (ev.camera_id && ev.pin_color) updatePinColor(ev.camera_id, ev.pin_color);
+  // Remember last incident on the camera so a manual click can replay it.
+  const cam = STATE.cameras.find((c) => c.camera_id === ev.camera_id);
+  if (cam) {
+    cam.pin_color = ev.pin_color || cam.pin_color;
+    cam.severity = ev.severity || cam.severity;
+    cam.last_incident_id = ev.incident_id || cam.last_incident_id;
+    cam.last_scenario_id = ev.scenario_id || cam.last_scenario_id;
+  }
   if (ev.pin_color !== "red" && ev.pin_color !== "yellow") return;
-  const cam = STATE.cameras.find((c) => c.camera_id === ev.camera_id) || {};
+  const camRef = cam || {};
   const title = (ev.recommended_action || ev.scenario_id || "Unauthorized Access Attempt")
     .replace(/_/g, " ").replace(/^scn-/, "")
     .replace(/\b\w/g, (m) => m.toUpperCase());
   set("rp-title", title);
-  set("rp-place", cam.label || ev.camera_id || "Unknown location");
-  set("rp-cam", (cam.camera_id || "").toUpperCase() || "GE-CAM-LIVE");
+  set("rp-place", camRef.label || ev.camera_id || "Unknown location");
+  set("rp-cam", (camRef.camera_id || "").toUpperCase() || "GE-CAM-LIVE");
   set("rp-id", `ID: ${ev.incident_id || "INC-LIVE"}`);
   if (ev.scenario_id) {
     const v = document.getElementById("cctv-video");
@@ -387,6 +471,54 @@ function applyIncident(ev) {
   }
   firstSeen = Date.now();
   repaintOverview();
+
+  // Auto-dispatch on critical (Twilio call). Per-camera 30min cooldown.
+  if (ev.severity === "critical") maybeDispatch(ev, camRef);
+}
+
+// ---- Twilio dispatch on critical incidents ----
+
+const DISPATCH_COOLDOWN_MS = 30 * 60 * 1000;
+const GLOBAL_DISPATCH_COOLDOWN_MS = 10 * 60 * 1000;
+const lastDispatchAt = new Map();
+let lastGlobalDispatchAt = 0;
+const inFlightDispatch = new Set();
+const dispatchMuted = () => localStorage.getItem("sentinel_mute_calls") === "1";
+
+async function maybeDispatch(ev, cam) {
+  const cid = ev.camera_id;
+  if (!cid || dispatchMuted()) return;
+  if (inFlightDispatch.has(cid)) return;
+  const last = lastDispatchAt.get(cid) || 0;
+  if (Date.now() - last < DISPATCH_COOLDOWN_MS) return;
+  if (Date.now() - lastGlobalDispatchAt < GLOBAL_DISPATCH_COOLDOWN_MS) return;
+  inFlightDispatch.add(cid);
+  try {
+    const r = await fetch("/dispatch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        incident_id: ev.incident_id,
+        camera_id: cid,
+        camera_label: cam.label || cid,
+        severity: ev.severity,
+        scene_summary: ev.scene_summary,
+        recommended_action: ev.recommended_action,
+      }),
+    });
+    const out = await r.json().catch(() => ({}));
+    if (r.ok && out.ok) {
+      lastDispatchAt.set(cid, Date.now());
+      lastGlobalDispatchAt = Date.now();
+      console.log("📞 dispatch placed:", out.call_sid, "→", out.to);
+    } else {
+      console.warn("dispatch failed:", out.error || r.status);
+    }
+  } catch (e) {
+    console.warn("dispatch fetch failed:", e);
+  } finally {
+    inFlightDispatch.delete(cid);
+  }
 }
 
 function connectSSE() {

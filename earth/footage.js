@@ -1,253 +1,279 @@
-// ZECURITY — All Footage live wall
-// 12 tiles, each looping a local Veo clip (or a procedural placeholder
-// if the clip is missing). Pure client-side; no broker dependency.
+// ZECURITY — All Cameras
+// 125 synthetic cameras paginated 15/page over real local Veo clips.
 
 const CLIPS = [
-  "scn-shoplifting",
-  "scn-crowd-surge",
-  "scn-car-break-in",
-  "scn-casing-behavior",
-  "scn-loitering",
-  "scn-normal-pedestrian",
-  "scn-jaywalking",
-  "scn-normal-parking",
-  "scn-bag-snatch",
-  "scn-fight",
+  "scn-shoplifting", "scn-crowd-surge", "scn-car-break-in", "scn-casing-behavior",
+  "scn-loitering", "scn-normal-pedestrian", "scn-jaywalking", "scn-normal-parking",
+  "scn-bag-snatch", "scn-fight",
 ];
 
-const FEEDS = [
-  { num: "01", code: "SF-001", loc: "Union Square",         city: "San Francisco", clip: "scn-shoplifting",       status: "suspicious" },
-  { num: "02", code: "NYC-001", loc: "Times Square",        city: "New York",      clip: "scn-crowd-surge",       status: "active" },
-  { num: "03", code: "LON-001", loc: "King's Cross",        city: "London",        clip: "scn-car-break-in",      status: "active" },
-  { num: "04", code: "PAR-001", loc: "Galeries Lafayette",  city: "Paris",         clip: "scn-casing-behavior",   status: "suspicious" },
-  { num: "05", code: "TYO-001", loc: "Shibuya",             city: "Tokyo",         clip: "scn-loitering",         status: "nominal" },
-  { num: "06", code: "DXB-001", loc: "Burj Khalifa",        city: "Dubai",         clip: "scn-normal-pedestrian", status: "nominal" },
-  { num: "07", code: "SYD-001", loc: "Pitt Street Mall",    city: "Sydney",        clip: "scn-jaywalking",        status: "nominal" },
-  { num: "08", code: "SAO-001", loc: "Av Paulista",         city: "São Paulo",     clip: "scn-normal-parking",    status: "nominal" },
-  { num: "09", code: "SF-002",  loc: "Union Sq · Angle B",  city: "San Francisco", clip: "scn-bag-snatch",        status: "active" },
-  { num: "10", code: "NYC-002", loc: "42nd St · Subway",    city: "New York",      clip: "scn-fight",             status: "nominal" },
-  { num: "11", code: "LON-002", loc: "King's X · Platform", city: "London",        clip: "scn-loitering",         status: "nominal" },
-  { num: "12", code: "TYO-002", loc: "Shibuya · ATM",       city: "Tokyo",         clip: "scn-normal-pedestrian", status: "nominal" },
+const LOCATIONS = [
+  { name: "Lobby Entrance",   loc: "New York, USA" },
+  { name: "Parking Garage",   loc: "New York, USA" },
+  { name: "Back Alley",       loc: "New York, USA" },
+  { name: "Server Room",      loc: "New York, USA" },
+  { name: "Office Floor 1",   loc: "New York, USA" },
+  { name: "Emergency Exit",   loc: "New York, USA" },
+  { name: "Loading Dock",     loc: "New York, USA" },
+  { name: "Rooftop",          loc: "New York, USA" },
+  { name: "Conference Room",  loc: "New York, USA" },
+  { name: "Elevator Lobby",   loc: "New York, USA" },
+  { name: "Hallway A",        loc: "New York, USA" },
+  { name: "Retail Floor",     loc: "New York, USA" },
+  { name: "Break Room",       loc: "New York, USA" },
+  { name: "Main Entrance",    loc: "New York, USA" },
+  { name: "Restricted Area",  loc: "New York, USA" },
 ];
 
-const STATUS_LABEL = {
-  nominal: "Nominal",
-  suspicious: "Suspicious",
-  active: "Active",
-};
+const STATUS_RING = ["live","live","live","suspicious","live","live","live","live","live","live","alert","live","live","live","live"];
 
-// ---- Build tiles ----
+const PAGE_SIZE = 15;
+const TOTAL = 125;
+
+// Build all cameras up front (light objects)
+const CAMERAS = Array.from({ length: TOTAL }, (_, i) => {
+  const slot = i % 15;
+  const meta = LOCATIONS[slot];
+  const idx = String(i + 1).padStart(2, "0");
+  // 10 of the first 15 should be live, 1 suspicious (slot 2), 1 alert (slot 10) — to match reference
+  const status = i < 15 ? STATUS_RING[slot] : (Math.random() < 0.04 ? "alert" : Math.random() < 0.06 ? "suspicious" : "live");
+  return {
+    id: idx,
+    name: `${idx} ${meta.name}`,
+    loc: meta.loc,
+    clip: CLIPS[i % CLIPS.length],
+    status,
+  };
+});
+
 const wall = document.getElementById("ftg-wall");
-const tiles = FEEDS.map((feed, i) => {
-  const tile = document.createElement("article");
-  tile.className = `ftg-tile ${feed.status === "active" ? "active-feed" : ""}`;
-  tile.dataset.status = feed.status;
-  tile.dataset.search = `${feed.loc} ${feed.city} ${feed.clip} ${feed.code}`.toLowerCase();
+const searchEl = document.getElementById("ftg-search-input");
+const colSelect = document.getElementById("ftg-cols");
 
-  tile.innerHTML = `
-    <canvas class="ftg-fallback" width="320" height="180"></canvas>
-    <video muted loop playsinline preload="metadata"
-           poster=""
-           src="/clips/${feed.clip}.mp4"></video>
-    <div class="ftg-vignette"></div>
-    <div class="ftg-scanlines"></div>
-    <div class="ftg-chrome">
-      <div class="ftg-chrome-top">
-        <div class="ftg-rec"><span class="ftg-rec-dot"></span>REC</div>
-        <div class="ftg-cam-id">${feed.code}</div>
-        <div class="ftg-time" data-time>00:00:00</div>
+let currentFilter = "all";
+let currentSearch = "";
+let currentPage = 1;
+
+// ---- Apply filter + search + paginate ----
+function visible(cam) {
+  if (currentFilter === "all") return true;
+  if (currentFilter === "live") return cam.status === "live";
+  if (currentFilter === "nominal") return cam.status === "live";
+  return cam.status === currentFilter;
+}
+function matches(cam) {
+  if (!currentSearch) return true;
+  const q = currentSearch.toLowerCase();
+  return (cam.name + " " + cam.loc + " " + cam.clip).toLowerCase().includes(q);
+}
+
+function render() {
+  const filtered = CAMERAS.filter((c) => visible(c) && matches(c));
+  const total = filtered.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > pages) currentPage = pages;
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const slice = filtered.slice(from, from + PAGE_SIZE);
+
+  // Render tiles
+  wall.innerHTML = "";
+  slice.forEach((cam, i) => {
+    const el = buildTile(cam, i);
+    wall.appendChild(el);
+  });
+
+  // Update pagination text
+  document.getElementById("pag-from").textContent = total === 0 ? 0 : (from + 1);
+  document.getElementById("pag-to").textContent = Math.min(from + PAGE_SIZE, total);
+  document.getElementById("pag-total").textContent = total;
+}
+
+function buildTile(cam, idx) {
+  const el = document.createElement("article");
+  el.className = `cam ${cam.status !== "live" ? cam.status : ""}`;
+  el.dataset.status = cam.status;
+
+  const pillLabel = cam.status === "alert" ? "ALERT"
+                  : cam.status === "suspicious" ? "SUSPICIOUS"
+                  : cam.status === "nominal" ? "NOMINAL"
+                  : "LIVE";
+  const pillClass = cam.status;
+
+  el.innerHTML = `
+    <div class="cam-thumb">
+      <canvas class="cam-fallback" width="320" height="180"></canvas>
+      <video muted loop playsinline preload="metadata" src="/clips/${cam.clip}.mp4"></video>
+      <div class="cam-vignette"></div>
+      <div class="cam-scan"></div>
+      <span class="cam-pill ${pillClass}"><span class="dot dot-${
+        pillClass === "alert" ? "red" :
+        pillClass === "suspicious" ? "yellow" :
+        pillClass === "nominal" ? "green" : "green"
+      }"></span>${pillLabel}</span>
+      <span class="cam-time" data-tile-time>--:--:-- --</span>
+    </div>
+    <div class="cam-meta">
+      <div class="cam-meta-left">
+        <h3 class="cam-name">${cam.name}</h3>
+        <div class="cam-loc">${cam.loc}</div>
       </div>
-      <div class="ftg-chrome-bot">
-        <div>
-          <div class="ftg-loc">${feed.loc}</div>
-          <div style="opacity:0.75;font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;">${feed.city}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="ftg-signal"><i></i><i></i><i></i><i></i></span>
-          <span class="ftg-status ${feed.status}">
-            <span class="ftg-status-dot"></span>${STATUS_LABEL[feed.status]}
-          </span>
-        </div>
+      <div class="cam-meta-right">
+        <span class="cam-status ${cam.status === "live" || cam.status === "nominal" ? "live" : cam.status}">
+          <span class="dot dot-${cam.status === "alert" ? "red" : cam.status === "suspicious" ? "yellow" : "green"}"></span>${cam.status === "alert" ? "ALERT" : cam.status === "suspicious" ? "SUSP." : "LIVE"}
+        </span>
+        <button class="cam-menu" aria-label="More" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        </button>
       </div>
     </div>
   `;
 
-  // Stagger video play to spread CPU
-  const video = tile.querySelector("video");
-  const canvas = tile.querySelector(".ftg-fallback");
-  let videoOk = false;
-
+  // Wire video + procedural fallback
+  const video = el.querySelector("video");
+  const canvas = el.querySelector(".cam-fallback");
+  paintFallback(canvas, cam, idx);
   video.addEventListener("loadeddata", () => {
-    videoOk = true;
-    canvas.style.display = "none";
-    // Start at a random offset so the wall doesn't feel synchronized
+    el.classList.add("has-video");
     try { video.currentTime = Math.random() * Math.max(1, (video.duration || 4) - 0.5); } catch {}
     video.play().catch(() => {});
   });
-  video.addEventListener("error", () => paintFallback(canvas, feed, i));
+  video.addEventListener("error", () => paintFallback(canvas, cam, idx));
+  setTimeout(() => video.load(), idx * 60);
 
-  setTimeout(() => video.load(), i * 80);
+  el.addEventListener("click", () => { window.location.href = "/dashboard"; });
 
-  // Always paint the fallback once so something is on screen immediately
-  paintFallback(canvas, feed, i);
-
-  return { el: tile, feed };
-});
-
-tiles.forEach((t) => wall.appendChild(t.el));
+  return el;
+}
 
 // ---- Procedural CCTV-noise placeholder ----
-function paintFallback(canvas, feed, seed) {
+function paintFallback(canvas, cam, seed) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const w = canvas.width, h = canvas.height;
-
-  // Base wash hue per status
-  const baseHue =
-    feed.status === "active" ? 350 :
-    feed.status === "suspicious" ? 42 : 215;
+  const hue = cam.status === "alert" ? 350 : cam.status === "suspicious" ? 42 : 215;
   const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, `hsl(${baseHue}, 22%, 10%)`);
-  grad.addColorStop(1, `hsl(${baseHue + 10}, 24%, 4%)`);
+  grad.addColorStop(0, `hsl(${hue}, 20%, 8%)`);
+  grad.addColorStop(1, `hsl(${hue + 10}, 22%, 4%)`);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
-  // Subtle noise
   const img = ctx.getImageData(0, 0, w, h);
   const d = img.data;
   for (let p = 0; p < d.length; p += 4) {
-    const n = (Math.random() - 0.5) * 36;
+    const n = (Math.random() - 0.5) * 28;
     d[p] = Math.max(0, Math.min(255, d[p] + n));
     d[p+1] = Math.max(0, Math.min(255, d[p+1] + n));
     d[p+2] = Math.max(0, Math.min(255, d[p+2] + n));
   }
   ctx.putImageData(img, 0, 0);
 
-  // Faux silhouette ground / horizon
   ctx.fillStyle = "rgba(0,0,0,0.55)";
   ctx.fillRect(0, h * 0.66, w, h * 0.34);
 
-  // "Camera" label fade
   ctx.fillStyle = "rgba(255,255,255,0.04)";
-  ctx.font = "bold 40px Space Grotesk, sans-serif";
-  ctx.fillText(feed.num, 18, h - 18);
-
-  // Drifting horizontal scan line
-  const sy = (Date.now() / 12 + seed * 20) % h;
-  ctx.fillStyle = "rgba(255,255,255,0.05)";
-  ctx.fillRect(0, sy, w, 1);
+  ctx.font = "bold 36px Sora, sans-serif";
+  ctx.fillText(cam.id, 16, h - 14);
 }
 
-// Animate procedural canvases at low rate (for the ones still visible because video failed to load)
-setInterval(() => {
-  tiles.forEach((t, i) => {
-    const v = t.el.querySelector("video");
-    const c = t.el.querySelector(".ftg-fallback");
-    if (!c || c.style.display === "none") return;
-    if (v && !v.paused && !v.ended && v.readyState >= 2) {
-      c.style.display = "none"; return;
-    }
-    paintFallback(c, t.feed, i);
-  });
-}, 250);
-
-// ---- Topbar clock ----
-const clockEl = document.getElementById("ftg-clock");
-const timeEls = document.querySelectorAll("[data-time]");
+// ---- Clock for tile timestamps ----
 function pad(n) { return String(n).padStart(2, "0"); }
 function tickClock() {
   const d = new Date();
-  const stamp = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
-  if (clockEl) clockEl.textContent = stamp;
-  const local = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  timeEls.forEach((el) => (el.textContent = local));
+  const stamp = `${pad(((d.getHours() + 11) % 12 + 1))}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${d.getHours() >= 12 ? "PM" : "AM"}`;
+  document.querySelectorAll("[data-tile-time]").forEach((el) => (el.textContent = stamp));
 }
 tickClock();
 setInterval(tickClock, 1000);
 
-// ---- Throughput jitter (placeholder) ----
-const thru = document.getElementById("ftg-thru");
-setInterval(() => {
-  if (!thru) return;
-  const fps = (24 + Math.random() * 2).toFixed(1);
-  const mbps = (38 + Math.random() * 8).toFixed(1);
-  thru.textContent = `${fps} fps · ${mbps} mbps`;
-}, 1000);
-
 // ---- Filter chips ----
-document.querySelectorAll(".ftg-filter").forEach((btn) => {
+document.querySelectorAll(".ftg-chip").forEach((btn) => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".ftg-filter").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".ftg-chip").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
-    const f = btn.dataset.filter;
-    let visible = 0;
-    tiles.forEach((t) => {
-      const show = f === "all" || t.feed.status === f;
-      t.el.classList.toggle("hidden", !show);
-      if (show) visible++;
-    });
-    document.getElementById("ftg-count").textContent = `${visible} / 12 feeds online`;
+    currentFilter = btn.dataset.filter;
+    currentPage = 1;
+    render();
   });
 });
 
 // ---- Search ----
-const searchEl = document.getElementById("ftg-search");
-if (searchEl) {
-  searchEl.addEventListener("input", () => {
-    const q = searchEl.value.trim().toLowerCase();
-    let visible = 0;
-    tiles.forEach((t) => {
-      const show = !q || t.feed.search.includes(q) || t.feed.code.toLowerCase().includes(q);
-      t.el.classList.toggle("hidden", !show);
-      if (show) visible++;
-    });
-    document.getElementById("ftg-count").textContent = `${visible} / 12 feeds online`;
-  });
-}
-
-// ---- Mute / pause / fullscreen ----
-const muteBtn = document.getElementById("ftg-mute");
-let muted = true;
-muteBtn?.addEventListener("click", () => {
-  muted = !muted;
-  document.querySelectorAll(".ftg-tile video").forEach((v) => (v.muted = muted));
-  muteBtn.textContent = muted ? "🔇 mute" : "🔊 sound";
-  muteBtn.classList.toggle("active", !muted);
+let searchT;
+searchEl?.addEventListener("input", () => {
+  clearTimeout(searchT);
+  searchT = setTimeout(() => {
+    currentSearch = searchEl.value.trim();
+    currentPage = 1;
+    render();
+  }, 150);
 });
 
-const pauseBtn = document.getElementById("ftg-pause");
-let paused = false;
-pauseBtn?.addEventListener("click", () => {
-  paused = !paused;
-  document.querySelectorAll(".ftg-tile video").forEach((v) => paused ? v.pause() : v.play().catch(()=>{}));
-  pauseBtn.textContent = paused ? "▶ play all" : "⏸ pause all";
-  pauseBtn.classList.toggle("active", paused);
+// ⌘K shortcut to focus search
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    searchEl?.focus();
+    searchEl?.select();
+  }
 });
 
-document.getElementById("ftg-fullscreen")?.addEventListener("click", () => {
-  const el = document.documentElement;
-  if (!document.fullscreenElement) el.requestFullscreen?.();
-  else document.exitFullscreen?.();
+// ---- Column count ----
+colSelect?.addEventListener("change", () => {
+  wall.dataset.cols = colSelect.value;
 });
 
-// ---- Last-incident readout (live, via broker SSE) ----
-const lastEl = document.getElementById("ftg-last");
-try {
-  const es = new EventSource("/events");
-  es.addEventListener("message", (msg) => {
-    try {
-      const data = JSON.parse(msg.data);
-      if (data.type === "status" && data.recommended_action) {
-        const t = new Date().toLocaleTimeString();
-        lastEl.textContent = `${t} · ${data.camera_id} · ${data.severity}`;
-      }
-    } catch {}
-  });
-} catch {}
-
-// ---- Tile click → jump to dashboard incident ----
-tiles.forEach((t) => {
-  t.el.addEventListener("click", () => {
-    window.location.href = `/dashboard`;
+// ---- View toggle (grid only for now; list mode collapses tiles) ----
+document.querySelectorAll(".view-btn").forEach((b) => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".view-btn").forEach((x) => x.classList.remove("active"));
+    b.classList.add("active");
+    wall.classList.toggle("as-list", b.dataset.view === "list");
   });
 });
+
+// ---- Pagination ----
+const pagCtrl = document.getElementById("ftg-pag-ctrl");
+pagCtrl?.addEventListener("click", (e) => {
+  const tgt = e.target.closest("button");
+  if (!tgt) return;
+  const page = tgt.dataset.page;
+  if (page === "prev") currentPage = Math.max(1, currentPage - 1);
+  else if (page === "next") currentPage = Math.min(9, currentPage + 1);
+  else if (page) currentPage = parseInt(page, 10);
+
+  pagCtrl.querySelectorAll(".pg-num").forEach((b) => b.classList.toggle("active", parseInt(b.dataset.page, 10) === currentPage));
+  pagCtrl.querySelectorAll(".pg-btn[data-page='prev']").forEach((b) => (b.disabled = currentPage === 1));
+  pagCtrl.querySelectorAll(".pg-btn[data-page='next']").forEach((b) => (b.disabled = currentPage === 9));
+
+  render();
+  wall.scrollTop = 0;
+});
+
+// ---- AI summary toast ----
+document.getElementById("ai-summary-btn")?.addEventListener("click", () => {
+  const t = document.createElement("div");
+  t.className = "ai-toast";
+  t.innerHTML = `
+    <div class="ai-toast-head"><span class="ai-sparkle">✦</span> AI Summary · last 24h</div>
+    <div class="ai-toast-body">
+      <p><strong>118 cameras online</strong> across 4 continents. <strong>3 incidents flagged critical</strong>:
+      bag snatch attempt at <em>03 Back Alley</em>, unauthorized access at <em>15 Restricted Area</em>,
+      and crowd surge at <em>06 Emergency Exit</em>.</p>
+      <p>7 suspicious feeds under elevated watch. System uptime 99.98%. No agent regressions detected.</p>
+    </div>
+    <button class="ai-toast-close" aria-label="Dismiss">×</button>
+  `;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add("show"));
+  t.querySelector(".ai-toast-close").addEventListener("click", () => {
+    t.classList.remove("show");
+    setTimeout(() => t.remove(), 250);
+  });
+  setTimeout(() => {
+    if (!t.isConnected) return;
+    t.classList.remove("show");
+    setTimeout(() => t.remove(), 250);
+  }, 9000);
+});
+
+// Initial render
+render();

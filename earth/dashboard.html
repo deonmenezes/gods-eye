@@ -3,194 +3,327 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZECURITY — Global Command Center</title>
+  <title>ZECURITY — Global Threat Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
   <script src="/config.js"></script>
 </head>
 <body>
-  <!-- Top status bar -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo-mark">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7">
+  <!-- ===== Icon rail (far left) ===== -->
+  <aside class="rail">
+    <a class="rail-brand" href="/" title="Zecurity">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="12" cy="12" r="9"/>
+        <circle cx="12" cy="12" r="4"/>
+        <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+      </svg>
+    </a>
+    <nav class="rail-nav">
+      <a class="rail-btn active" href="/dashboard" title="Global view" aria-label="Global view">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M3 12h18M12 3a14.5 14.5 0 010 18M12 3a14.5 14.5 0 000 18"/>
+        </svg>
+      </a>
+      <a class="rail-btn" href="#" title="Threats" aria-label="Threats">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z"/>
+        </svg>
+      </a>
+      <a class="rail-btn" href="/footage" title="All footage" aria-label="Footage">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <rect x="3" y="6" width="14" height="12" rx="2"/>
+          <path d="M17 10l4-2v8l-4-2z"/>
+        </svg>
+      </a>
+      <a class="rail-btn" href="#" title="Agents" aria-label="Agents">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <circle cx="9" cy="9" r="3"/>
+          <path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/>
+          <circle cx="17" cy="7" r="2.5"/>
+          <path d="M15 14c3 0 7 1.7 7 5"/>
+        </svg>
+      </a>
+      <a class="rail-btn" href="#" title="Archive" aria-label="Archive">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <rect x="3" y="5" width="18" height="4" rx="1"/>
+          <path d="M5 9v9a2 2 0 002 2h10a2 2 0 002-2V9M10 13h4"/>
+        </svg>
+      </a>
+    </nav>
+    <div class="rail-foot">
+      <div class="rail-avatar" title="Operator">
+        <span class="avatar-photo">DM</span>
+        <span class="avatar-dot"></span>
+      </div>
+      <button class="rail-btn rail-bell" title="Notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M6 8a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6z"/>
+          <path d="M10 20a2 2 0 004 0"/>
+        </svg>
+        <span class="bell-dot"></span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== Left context panel ===== -->
+  <aside class="lpanel">
+    <header class="lpanel-brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
           <circle cx="12" cy="12" r="9"/>
           <circle cx="12" cy="12" r="4"/>
           <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
         </svg>
-      </div>
-      <div class="brand-text">
-        <div class="name"><a href="/" style="color:inherit;text-decoration:none">ZECURITY</a></div>
-        <div class="subname">managed by AI agents</div>
-      </div>
-    </div>
+      </span>
+      <span class="brand-word">ZECURITY</span>
+    </header>
 
-    <div class="metrics">
-      <div class="metric red">
-        <div class="metric-dot"></div>
-        <div class="metric-body">
-          <div class="metric-num" id="count-red">0</div>
-          <div class="metric-lbl">active</div>
-        </div>
+    <!-- Threat level card -->
+    <section class="card threat-card">
+      <div class="card-eyebrow">GLOBAL THREAT LEVEL</div>
+      <div class="threat-level">CRITICAL</div>
+      <svg class="spark spark-red" viewBox="0 0 240 60" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="sg-red" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ff3956" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#ff3956" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path id="spark-area" d="M0,42 L20,38 40,40 60,32 80,36 100,28 120,30 140,22 160,26 180,18 200,22 220,14 240,8 L240,60 0,60 Z" fill="url(#sg-red)"/>
+        <path id="spark-line" d="M0,42 L20,38 40,40 60,32 80,36 100,28 120,30 140,22 160,26 180,18 200,22 220,14 240,8" fill="none" stroke="#ff5070" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      <div class="threat-pct">
+        <span class="pct-num">90<span class="pct-unit">%</span></span>
       </div>
-      <div class="metric yellow">
-        <div class="metric-dot"></div>
-        <div class="metric-body">
-          <div class="metric-num" id="count-yellow">0</div>
-          <div class="metric-lbl">suspicious</div>
-        </div>
+      <p class="threat-caption">OF THE INTERNET<br/>IS VULNERABLE RIGHT NOW</p>
+      <div class="threat-delta">
+        <svg viewBox="0 0 12 12" width="12" height="12" fill="currentColor"><path d="M6 2l4 6H2z"/></svg>
+        12% <span>vs yesterday</span>
       </div>
-      <div class="metric green">
-        <div class="metric-dot"></div>
-        <div class="metric-body">
-          <div class="metric-num" id="count-green">0</div>
-          <div class="metric-lbl">nominal</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="status-cluster">
-      <a href="/footage" class="topbar-link" title="Open the live footage wall">▦ All footage</a>
-      <div class="utc"><span id="utc-clock">--:--:-- UTC</span></div>
-      <button id="mute-toggle" class="mute-btn" title="Toggle dispatch calls">
-        <span id="mute-icon">🔔</span> <span id="mute-label">calls on</span>
-      </button>
-      <div class="status-pill">
-        <span id="conn-status" class="conn-dot offline"></span>
-        <span id="conn-text">connecting…</span>
-      </div>
-    </div>
-  </header>
-
-  <!-- Flashing alert banner (fires on new critical incidents) -->
-  <div id="alert-banner" class="alert-banner">
-    <div class="alert-stripe"></div>
-    <div class="alert-body">
-      <span class="alert-tag">🚨 CRITICAL</span>
-      <span id="alert-text">—</span>
-    </div>
-    <div class="alert-stripe"></div>
-  </div>
-
-  <main>
-    <!-- Left: live incident feed -->
-    <aside class="feed">
-      <div class="feed-header">
-        <div class="feed-title">incident feed</div>
-        <div class="feed-meta" id="feed-meta">awaiting events</div>
-      </div>
-      <div class="feed-tabs">
-        <button class="feed-tab active" data-filter="all">All</button>
-        <button class="feed-tab" data-filter="red">Active</button>
-        <button class="feed-tab" data-filter="yellow">Suspicious</button>
-      </div>
-      <div id="feed-list" class="feed-list"></div>
-      <div class="feed-footer">
-        <div>roster</div>
-        <div id="feed-roster"></div>
-      </div>
-    </aside>
-
-    <!-- Middle: 3D map -->
-    <section class="map-section">
-      <div id="map-root"></div>
-
-      <!-- Map overlays -->
-      <div class="map-overlay top-left">
-        <div class="locator">
-          <div class="locator-coords" id="locator-coords">GLOBAL · 0°N 0°W</div>
-          <div class="locator-sub" id="locator-sub">loading…</div>
-        </div>
-      </div>
-
-      <div class="map-overlay bottom-left">
-        <div class="legend">
-          <div class="legend-row"><span class="legend-dot red"></span>active threat</div>
-          <div class="legend-row"><span class="legend-dot yellow"></span>suspicious</div>
-          <div class="legend-row"><span class="legend-dot green"></span>nominal</div>
-        </div>
-      </div>
-
-      <div class="map-overlay bottom-right">
-        <div class="ops-controls">
-          <button id="orbit-toggle" class="op-btn" title="Toggle camera orbit">◐ orbit</button>
-          <button id="recenter-btn" class="op-btn" title="Recenter on SF">⌂ home</button>
-        </div>
-      </div>
-
-      <!-- Scanline overlay (decorative) -->
-      <div class="scanlines"></div>
     </section>
 
-    <!-- Right: incident detail with CCTV viewport -->
-    <aside class="detail" id="detail-panel">
-      <div class="detail-header">
-        <div>
-          <div class="detail-label" id="d-label">Awaiting first incident…</div>
-          <div class="detail-sub"><span id="d-cam">—</span> · <span id="d-zone">—</span></div>
-        </div>
-        <div class="detail-sev">
-          <span id="d-sev" class="sev-pill info">info</span>
-        </div>
+    <!-- Live overview -->
+    <section class="card overview-card">
+      <div class="card-eyebrow">LIVE OVERVIEW</div>
+      <ul class="overview-list">
+        <li><span class="dot dot-red"></span><span class="ov-key">Active incidents</span><span class="ov-val" id="ov-active">0</span></li>
+        <li><span class="dot dot-green"></span><span class="ov-key">Agents online</span><span class="ov-val" id="ov-agents">0</span></li>
+        <li><span class="dot dot-blue"></span><span class="ov-key">Cameras streaming</span><span class="ov-val" id="ov-cameras">14,392</span></li>
+        <li><span class="dot dot-violet"></span><span class="ov-key">Threats detected</span><span class="ov-val" id="ov-threats">8,921</span></li>
+      </ul>
+    </section>
+
+    <!-- Threat feed -->
+    <section class="card feed-card">
+      <div class="card-eyebrow row-between">
+        <span>THREAT FEED</span>
+        <a class="link-tiny" href="#">View all</a>
+      </div>
+      <ul class="feed-list" id="feed-list">
+        <!-- Filled by JS -->
+      </ul>
+    </section>
+  </aside>
+
+  <!-- ===== Center column ===== -->
+  <main class="center">
+    <!-- Center header -->
+    <div class="ch-row">
+      <div class="ch-title-wrap">
+        <h1 class="ch-title">
+          Global Threat Intelligence
+          <span class="live-pill"><span class="live-dot"></span>LIVE</span>
+        </h1>
+        <p class="ch-sub">Monitoring <strong id="mon-agents">8</strong> agents across <strong>4</strong> continents</p>
+      </div>
+      <div class="ch-actions">
+        <a class="ch-btn" href="/footage">View all cameras</a>
+        <button class="ch-btn icon-only" id="fullscreen-btn" title="Fullscreen">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Globe stage -->
+    <section class="stage">
+      <div class="globe-stage">
+        <canvas id="cobe-globe" width="1400" height="1400"></canvas>
+        <div id="globe-callouts" class="callouts"></div>
       </div>
 
-      <!-- Synthetic CCTV viewport — real Veo MP4 if available, canvas fallback -->
-      <div class="cctv">
-        <video id="cctv-video" autoplay muted loop playsinline preload="auto"></video>
-        <canvas id="cctv-canvas" width="640" height="360"></canvas>
-        <div class="cctv-chrome">
-          <div class="cctv-top">
-            <div class="rec-badge"><span class="rec-dot"></span>REC</div>
-            <div class="cctv-cam-id" id="cctv-cam-id">—</div>
-            <div class="cctv-time" id="cctv-time">--:--:--</div>
-          </div>
-          <div class="cctv-bottom">
-            <div class="cctv-tag" id="cctv-tag">VEO 3.1 · synthetic</div>
-            <div class="cctv-scenario" id="cctv-scenario">—</div>
-          </div>
-        </div>
-        <div class="cctv-vignette"></div>
+      <!-- legend bottom-left -->
+      <div class="legend-card">
+        <div class="legend-title">THREAT INTENSITY</div>
+        <ul>
+          <li><span class="dot dot-red"></span>Critical</li>
+          <li><span class="dot dot-orange"></span>High</li>
+          <li><span class="dot dot-yellow"></span>Medium</li>
+          <li><span class="dot dot-blue"></span>Low</li>
+        </ul>
       </div>
 
-      <div class="detail-action-bar">
-        <div class="detail-action-info">
-          <div class="detail-action-key">recommended</div>
-          <div class="detail-action-val" id="d-action">—</div>
-        </div>
-        <div class="detail-actions">
-          <button class="action-btn dispatch" data-action="dispatch">DISPATCH</button>
-          <button class="action-btn escalate" data-action="escalate">Escalate</button>
-          <button class="action-btn ghost" data-action="false_positive">False positive</button>
-        </div>
+      <!-- 2D/3D toggle bottom-right -->
+      <div class="dim-toggle" role="group">
+        <button data-dim="2d">2D</button>
+        <button data-dim="3d" class="active">3D</button>
       </div>
+    </section>
 
-      <div class="detail-section">
-        <div class="section-title">scene</div>
-        <p id="d-summary" class="scene">Waiting for first analysis…</p>
-      </div>
-
-      <div class="detail-section">
-        <div class="section-title">findings</div>
-        <ul id="d-findings" class="findings"></ul>
-      </div>
-
-      <div class="detail-section">
-        <div class="section-title">agent trace</div>
-        <div class="trace-meta" id="d-sev-reason">—</div>
-        <ol id="d-trace" class="trace"></ol>
-      </div>
-
-      <div class="detail-section">
-        <div class="section-title">deep link</div>
-        <div class="deeplink">
-          <input id="d-deeplink" readonly />
-          <button id="copy-link">copy</button>
-        </div>
-      </div>
-    </aside>
+    <!-- Stat cards row -->
+    <section class="statbar">
+      <article class="stat">
+        <div class="stat-key">TOTAL AGENTS</div>
+        <div class="stat-val" id="stat-agents">8</div>
+        <div class="stat-sub">All online</div>
+        <svg class="spark mini" viewBox="0 0 120 36" preserveAspectRatio="none">
+          <path d="M0,28 L15,24 30,26 45,20 60,22 75,16 90,18 105,12 120,14" fill="none" stroke="#2fd17a" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      </article>
+      <article class="stat">
+        <div class="stat-key">LIVE CAMERAS</div>
+        <div class="stat-val">14,392</div>
+        <div class="stat-sub">Streaming now</div>
+        <svg class="spark mini" viewBox="0 0 120 36" preserveAspectRatio="none">
+          <path d="M0,24 L15,26 30,22 45,18 60,20 75,14 90,16 105,10 120,12" fill="none" stroke="#3d7bff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      </article>
+      <article class="stat">
+        <div class="stat-key">RECORDINGS</div>
+        <div class="stat-val">2.4<span class="stat-unit">TB</span></div>
+        <div class="stat-sub">Stored securely</div>
+        <svg class="spark mini" viewBox="0 0 120 36" preserveAspectRatio="none">
+          <path d="M0,30 L15,26 30,28 45,22 60,24 75,18 90,20 105,14 120,16" fill="none" stroke="#b487ff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      </article>
+      <article class="stat">
+        <div class="stat-key">UPTIME</div>
+        <div class="stat-val">99.98<span class="stat-unit">%</span></div>
+        <div class="stat-sub">System status</div>
+        <svg class="spark mini" viewBox="0 0 120 36" preserveAspectRatio="none">
+          <path d="M0,16 L15,18 30,14 45,16 60,12 75,14 90,10 105,12 120,8" fill="none" stroke="#2ee5ff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      </article>
+      <article class="stat">
+        <div class="stat-key">AI DETECTIONS</div>
+        <div class="stat-val">8,921</div>
+        <div class="stat-sub">Last 24 hours</div>
+        <svg class="spark mini" viewBox="0 0 120 36" preserveAspectRatio="none">
+          <path d="M0,28 L15,24 30,20 45,22 60,16 75,18 90,12 105,14 120,8" fill="none" stroke="#ff5070" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      </article>
+    </section>
   </main>
+
+  <!-- ===== Right active-incident panel ===== -->
+  <aside class="rpanel" id="rpanel">
+    <header class="rp-head">
+      <div>
+        <div class="card-eyebrow">ACTIVE INCIDENT</div>
+        <div class="rp-id" id="rp-id">ID: INC-2026-05-24-001</div>
+      </div>
+      <button class="rp-close" title="Close" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+
+    <div class="rp-title-row">
+      <span class="sev-pill critical">CRITICAL</span>
+      <h2 class="rp-title" id="rp-title">Unauthorized Access Attempt</h2>
+    </div>
+
+    <div class="rp-loc">
+      <span class="flag" id="rp-flag">🇺🇸</span>
+      <span id="rp-place">New York, United States</span>
+    </div>
+    <div class="rp-cam">Camera: <span id="rp-cam">NY-CAM-042</span></div>
+
+    <!-- CCTV preview -->
+    <div class="cctv">
+      <video id="cctv-video" autoplay muted loop playsinline preload="auto"></video>
+      <div class="cctv-fallback" id="cctv-fallback">
+        <svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="bg-r" cx="50%" cy="100%" r="80%">
+              <stop offset="0%" stop-color="#0b1320"/>
+              <stop offset="100%" stop-color="#020410"/>
+            </radialGradient>
+          </defs>
+          <rect width="200" height="120" fill="url(#bg-r)"/>
+          <rect x="0" y="70" width="200" height="50" fill="rgba(0,0,0,0.45)"/>
+          <ellipse cx="100" cy="78" rx="22" ry="8" fill="rgba(0,0,0,0.65)"/>
+          <path d="M100 30 Q88 30 88 46 L88 66 Q88 76 100 78 Q112 76 112 66 L112 46 Q112 30 100 30 Z" fill="#10182a"/>
+          <ellipse cx="100" cy="48" rx="9" ry="6" fill="#070b15"/>
+        </svg>
+      </div>
+      <div class="cctv-live"><span class="dot dot-red pulse"></span>LIVE</div>
+    </div>
+
+    <!-- Time stats -->
+    <div class="rp-times">
+      <div>
+        <div class="rp-t-key">FIRST DETECTED</div>
+        <div class="rp-t-val" id="rp-first-t">01:22:20 AM</div>
+        <div class="rp-t-date" id="rp-first-d">5/24/2026</div>
+      </div>
+      <div>
+        <div class="rp-t-key">LAST SEEN</div>
+        <div class="rp-t-val" id="rp-last-t">01:22:28 AM</div>
+        <div class="rp-t-date" id="rp-last-d">5/24/2026</div>
+      </div>
+      <div>
+        <div class="rp-t-key">DURATION</div>
+        <div class="rp-t-val" id="rp-dur">8s</div>
+        <div class="rp-t-date">elapsed</div>
+      </div>
+    </div>
+
+    <!-- Recommended actions -->
+    <div class="rp-section">
+      <div class="card-eyebrow">RECOMMENDED ACTIONS</div>
+      <div class="rp-actions">
+        <button class="act-btn primary">DISPATCH TEAM</button>
+        <button class="act-btn outline">ESCALATE</button>
+        <button class="act-btn ghost">MONITOR</button>
+      </div>
+    </div>
+
+    <!-- Agent -->
+    <div class="rp-section">
+      <div class="card-eyebrow">AGENT ASSIGNED</div>
+      <div class="agent-row">
+        <span class="dot dot-green"></span>
+        <span class="agent-id" id="rp-agent">ZC-AGENT-07</span>
+        <a class="link-tiny ml-auto" href="#">View agent →</a>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="rp-section">
+      <div class="card-eyebrow">NOTES</div>
+      <textarea class="rp-notes" id="rp-notes" placeholder="Add notes about this incident..."></textarea>
+      <div class="rp-notes-row">
+        <input class="rp-tag" placeholder="Add tag (e.g., #hostile)"/>
+        <button class="act-btn outline sm">SAVE NOTE</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Hidden but kept-around legacy nodes the existing app.js may still touch -->
+  <div class="legacy-stub" hidden>
+    <span id="conn-status"></span>
+    <span id="conn-text"></span>
+    <span id="utc-clock"></span>
+    <span id="count-red">0</span>
+    <span id="count-yellow">0</span>
+    <span id="count-green">0</span>
+    <div id="alert-banner"></div>
+    <span id="alert-text"></span>
+  </div>
 
   <script type="module" src="/app.js"></script>
 </body>

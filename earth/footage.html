@@ -3,93 +3,292 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZECURITY — All footage · live wall</title>
+  <title>ZECURITY — All Cameras</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/landing.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/footage.css" />
 </head>
-<body class="footage">
-  <div class="bg-grid"></div>
-  <div class="bg-glow"></div>
-
-  <!-- Topbar -->
-  <header class="ftg-top">
-    <a class="logo" href="/">
-      <span class="logo-mark">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="12" cy="12" r="9"/>
-          <circle cx="12" cy="12" r="4"/>
-          <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
-        </svg>
-      </span>
-      <span class="logo-word">ZECURITY</span>
-      <span class="logo-sep">/</span>
-      <span class="logo-page">ALL FOOTAGE · LIVE</span>
+<body class="ftg-body">
+  <!-- ===== Icon rail ===== -->
+  <aside class="rail">
+    <a class="rail-brand" href="/" title="Zecurity">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="12" cy="12" r="9"/>
+        <circle cx="12" cy="12" r="4"/>
+        <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+      </svg>
     </a>
-
-    <nav class="ftg-nav">
-      <a href="/" class="ftg-nav-link">Landing</a>
-      <a href="/dashboard" class="ftg-nav-link">Command center</a>
-      <a href="/footage" class="ftg-nav-link active">All footage</a>
+    <nav class="rail-nav">
+      <a class="rail-btn" href="/dashboard" title="Global view">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14.5 14.5 0 010 18M12 3a14.5 14.5 0 000 18"/>
+        </svg>
+      </a>
+      <a class="rail-btn" href="#" title="Threats">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z"/>
+        </svg>
+      </a>
+      <a class="rail-btn active" href="/footage" title="All cameras">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <rect x="3" y="6" width="14" height="12" rx="2"/><path d="M17 10l4-2v8l-4-2z"/>
+        </svg>
+      </a>
+      <a class="rail-btn" href="#" title="Agents">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <circle cx="9" cy="9" r="3"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="7" r="2.5"/><path d="M15 14c3 0 7 1.7 7 5"/>
+        </svg>
+      </a>
+      <a class="rail-btn" href="#" title="Sites">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/>
+        </svg>
+      </a>
+      <a class="rail-btn" href="#" title="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1A2 2 0 113.4 17l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H2a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.8L3.2 7A2 2 0 016 4.2l.1.1a1.7 1.7 0 001.8.3H8a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1A2 2 0 0119.7 7l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>
+        </svg>
+      </a>
     </nav>
+    <div class="rail-foot">
+      <div class="rail-avatar" title="Operator"><span class="avatar-photo">DM</span><span class="avatar-dot"></span></div>
+      <button class="rail-btn rail-bell" title="Notifications">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M6 8a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/>
+        </svg>
+        <span class="bell-dot"></span>
+      </button>
+    </div>
+  </aside>
 
-    <div class="ftg-meta">
-      <div class="ftg-meta-pill">
-        <span class="rec-dot"></span>
-        <span id="ftg-count">12 / 12 feeds online</span>
+  <!-- ===== Main content ===== -->
+  <div class="ftg-main">
+
+    <!-- Top bar -->
+    <header class="ftg-topbar">
+      <a class="ftg-logo" href="/">
+        <span class="brand-mark">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7">
+            <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="ftg-logo-word">ZECURITY</span>
+      </a>
+
+      <div class="ftg-search">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <input id="ftg-search-input" type="text" placeholder="Search cameras, locations..." />
+        <kbd class="ftg-kbd">⌘K</kbd>
       </div>
-      <div class="ftg-meta-pill">
-        <span class="ftg-clock-icon">◐</span>
-        <span id="ftg-clock">--:--:-- UTC</span>
+
+      <div class="ftg-topright">
+        <button class="ftg-ai-btn" id="ai-summary-btn">
+          <span class="ai-sparkle">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+              <path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2zM19 14l.9 2.8L22 18l-2.1.9L19 22l-.9-3.1L16 18l2.1-1.2.9-2.8zM5 14l.6 1.9L8 17l-2.4.9L5 20l-.6-2.1L2 17l2.4-1.1.6-1.9z"/>
+            </svg>
+          </span>
+          AI Summary
+        </button>
+        <button class="ftg-icon-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M6 8a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/>
+          </svg>
+          <span class="ftg-icon-dot"></span>
+        </button>
+        <div class="ftg-avatar"><span>TM</span><span class="avatar-dot"></span></div>
       </div>
-      <div class="ftg-controls">
-        <button id="ftg-mute" class="ftg-btn" title="Audio is off by default — browsers block autoplay sound">🔇 mute</button>
-        <button id="ftg-pause" class="ftg-btn" title="Pause/play all">⏸ pause all</button>
-        <button id="ftg-fullscreen" class="ftg-btn" title="Fullscreen">⛶</button>
+    </header>
+
+    <!-- Page header -->
+    <div class="ftg-pagehead">
+      <div>
+        <h1 class="ftg-h1">All Cameras</h1>
+        <p class="ftg-sub">Real-time AI monitoring across all locations</p>
+      </div>
+      <div class="ftg-headright">
+        <div class="ftg-select">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M3 6h18M6 12h12M10 18h4"/>
+          </svg>
+          <select id="ftg-group">
+            <option>All Groups</option>
+            <option>North America</option>
+            <option>Europe</option>
+            <option>APAC</option>
+            <option>South America</option>
+          </select>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="caret">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </div>
       </div>
     </div>
-  </header>
 
-  <!-- Filter strip -->
-  <div class="ftg-filters">
-    <button class="ftg-filter active" data-filter="all">All <span>12</span></button>
-    <button class="ftg-filter" data-filter="active">● Active <span class="dot-red">3</span></button>
-    <button class="ftg-filter" data-filter="suspicious">● Suspicious <span class="dot-yellow">2</span></button>
-    <button class="ftg-filter" data-filter="nominal">● Nominal <span class="dot-green">7</span></button>
-    <div class="ftg-filter-spacer"></div>
-    <div class="ftg-search">
-      <input id="ftg-search" type="text" placeholder="Search location, city, or scenario…" />
+    <!-- KPI cards -->
+    <section class="ftg-kpis">
+      <article class="kpi">
+        <div class="kpi-key">TOTAL CAMERAS</div>
+        <div class="kpi-row">
+          <div class="kpi-val" id="kpi-total">125</div>
+          <div class="kpi-art kpi-art-mute">
+            <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4">
+              <rect x="3" y="7" width="13" height="10" rx="1.5"/>
+              <path d="M16 11l4-2v6l-4-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-sub">100% of system</div>
+      </article>
+
+      <article class="kpi">
+        <div class="kpi-key">ONLINE NOW</div>
+        <div class="kpi-row">
+          <div class="kpi-val" id="kpi-online">118</div>
+          <svg class="kpi-spark" viewBox="0 0 120 40" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="ks-g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2fd17a" stop-opacity="0.45"/>
+                <stop offset="100%" stop-color="#2fd17a" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,30 L15,26 30,28 45,22 60,24 75,18 90,20 105,12 120,16 L120,40 0,40 Z" fill="url(#ks-g)"/>
+            <path d="M0,30 L15,26 30,28 45,22 60,24 75,18 90,20 105,12 120,16" fill="none" stroke="#2fd17a" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+          <span class="kpi-pip pip-green"></span>
+        </div>
+        <div class="kpi-sub">94.4% online</div>
+      </article>
+
+      <article class="kpi">
+        <div class="kpi-key">SUSPICIOUS FEEDS</div>
+        <div class="kpi-row">
+          <div class="kpi-val kpi-val-warn" id="kpi-susp">7</div>
+          <svg class="kpi-spark" viewBox="0 0 120 40" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="ks-y" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffc83b" stop-opacity="0.45"/>
+                <stop offset="100%" stop-color="#ffc83b" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,24 L15,20 30,22 45,16 60,20 75,12 90,18 105,14 120,10 L120,40 0,40 Z" fill="url(#ks-y)"/>
+            <path d="M0,24 L15,20 30,22 45,16 60,20 75,12 90,18 105,14 120,10" fill="none" stroke="#ffc83b" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+          <span class="kpi-pip pip-yellow"></span>
+        </div>
+        <div class="kpi-sub">5.6% of online</div>
+      </article>
+
+      <article class="kpi">
+        <div class="kpi-key">FLAGGED INCIDENTS</div>
+        <div class="kpi-row">
+          <div class="kpi-val kpi-val-bad" id="kpi-flag">3</div>
+          <svg class="kpi-spark" viewBox="0 0 120 40" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="ks-r" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ff5070" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#ff5070" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,30 L15,28 30,24 45,26 60,18 75,22 90,12 105,16 120,8 L120,40 0,40 Z" fill="url(#ks-r)"/>
+            <path d="M0,30 L15,28 30,24 45,26 60,18 75,22 90,12 105,16 120,8" fill="none" stroke="#ff5070" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+          <span class="kpi-pip pip-red"></span>
+        </div>
+        <div class="kpi-sub">Requires attention</div>
+      </article>
+
+      <article class="kpi">
+        <div class="kpi-key">SYSTEM UPTIME</div>
+        <div class="kpi-row">
+          <div class="kpi-val">99.98<span class="kpi-unit">%</span></div>
+          <div class="kpi-art">
+            <svg viewBox="0 0 44 44" width="44" height="44">
+              <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(139,93,255,0.18)" stroke-width="3"/>
+              <circle cx="22" cy="22" r="18" fill="none" stroke="#8b5dff" stroke-width="3" stroke-dasharray="113.1 113.1" stroke-dashoffset="0.2" stroke-linecap="round" transform="rotate(-90 22 22)"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-sub">All systems operational</div>
+      </article>
+    </section>
+
+    <!-- Filter row -->
+    <div class="ftg-filterbar">
+      <div class="ftg-chips">
+        <button class="ftg-chip active" data-filter="all">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg>
+          All Cameras <span class="chip-count">125</span>
+        </button>
+        <button class="ftg-chip" data-filter="live">
+          <span class="dot dot-green"></span>Live <span class="chip-count">118</span>
+        </button>
+        <button class="ftg-chip" data-filter="suspicious">
+          <span class="dot dot-yellow"></span>Suspicious <span class="chip-count">7</span>
+        </button>
+        <button class="ftg-chip" data-filter="alert">
+          <span class="dot dot-red"></span>Alert <span class="chip-count">3</span>
+        </button>
+        <button class="ftg-chip" data-filter="nominal">
+          <span class="dot dot-green"></span>Nominal <span class="chip-count">108</span>
+        </button>
+      </div>
+      <div class="ftg-toolbar">
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="grid" title="Grid">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </button>
+          <button class="view-btn" data-view="list" title="List">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          </button>
+        </div>
+        <div class="ftg-select compact">
+          <select id="ftg-cols">
+            <option value="5" selected>5 Columns</option>
+            <option value="4">4 Columns</option>
+            <option value="3">3 Columns</option>
+            <option value="2">2 Columns</option>
+          </select>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="caret"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="ftg-select compact">
+          <select id="ftg-sort">
+            <option>Sort: Default</option>
+            <option>Sort: Name</option>
+            <option>Sort: Status</option>
+            <option>Sort: Recent</option>
+          </select>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="caret"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
     </div>
+
+    <!-- Camera grid -->
+    <main class="ftg-wall" id="ftg-wall" data-cols="5"><!-- tiles injected --></main>
+
+    <!-- Pagination -->
+    <footer class="ftg-pag">
+      <div class="ftg-pag-info">Showing <strong id="pag-from">1</strong> to <strong id="pag-to">15</strong> of <strong id="pag-total">125</strong> cameras</div>
+      <nav class="ftg-pag-ctrl" id="ftg-pag-ctrl">
+        <button class="pg-btn" data-page="prev" disabled>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="pg-num active" data-page="1">1</button>
+        <button class="pg-num" data-page="2">2</button>
+        <button class="pg-num" data-page="3">3</button>
+        <span class="pg-ellipsis">…</span>
+        <button class="pg-num" data-page="9">9</button>
+        <button class="pg-btn" data-page="next">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </nav>
+    </footer>
   </div>
-
-  <!-- 6-column wall -->
-  <main class="ftg-wall" id="ftg-wall">
-    <!-- Tiles injected by JS -->
-  </main>
-
-  <!-- Status footer -->
-  <footer class="ftg-footer">
-    <div class="ftg-foot-row">
-      <div>
-        <span class="ftg-foot-key">storage</span>
-        <span class="ftg-foot-val">ephemeral · 0 bytes retained</span>
-      </div>
-      <div>
-        <span class="ftg-foot-key">agents</span>
-        <span class="ftg-foot-val">12 × gemini · 1 sandbox per feed</span>
-      </div>
-      <div>
-        <span class="ftg-foot-key">throughput</span>
-        <span class="ftg-foot-val mono" id="ftg-thru">— fps · — mbps</span>
-      </div>
-      <div>
-        <span class="ftg-foot-key">last incident</span>
-        <span class="ftg-foot-val mono" id="ftg-last">awaiting…</span>
-      </div>
-    </div>
-  </footer>
 
   <script type="module" src="/footage.js"></script>
 </body>
